@@ -46,6 +46,11 @@ sec_comp_len = comp_len[1]
 comp_len_counter = Counter(comp_len)
 num_cc = [[i, comp_len_counter[i]] for i in np.arange(1, sec_comp_len + 1)]
 
+# for problem 3
+node_path = nx.single_source_shortest_path_length(G, 'Hartmanis')
+path_counter = Counter(node_path.values())
+
+
            
 print('create graph from file done!')
 print('create a undirected graph with {0} nodes and {1} edges'.format(G.number_of_nodes(), G.number_of_edges()))
@@ -64,6 +69,10 @@ def Problem2():
         fout.writelines("@ 2 "+" ".join([str(max_comp_len), str(num_nodes), str(max_comp_len/num_nodes)]) + "\n")     
         # for 2(b)
         fout.writelines(["@ 2 "+" ".join([str(l[0]), str(l[1])]) + "\n" for l in num_cc])
+        
+def Problem3():
+    with open('hw1solution.txt', mode = 'a', encoding = 'utf-8') as fout:
+        fout.writelines(["@ 3 " + " ".join([str(key), str(value)]) + "\n" for key, value in path_counter.items()])
 
 def Problem1_plot():
     degree = np.array([l[0] for l in degree_counter if l[1] != 0])
@@ -84,8 +93,18 @@ def Problem2_plot():
     ax.set_yscale('log')
     ax.set_xlabel('size ($j$)')
     ax.set_ylabel('num of connected comp ($k_j$)')
-    ax.set_title('plot1: scatterplot for $(log j, log k_j)$')
+    ax.set_title('plot2: scatterplot for $(log j, log k_j)$')
     ax.plot(cc, n_cc, 'ro')    
+    
+def Problem3_plot():
+    fig, ax = plt.subplots()
+    # ax.set_xscale('log')
+    # ax.set_yscale('log')
+    ax.set_xlabel('path lenght ($j$)')
+    ax.set_ylabel('num of nodes ($r_j$)')
+    ax.set_title('plot3: scatterplot for $(log j, log r_j)$')
+    ax.set_xticks(list(path_counter.keys()))
+    ax.bar(list(path_counter.keys()),list(path_counter.values()), facecolor='red')
     
 
 if __name__ == '__main__':
@@ -94,6 +113,8 @@ if __name__ == '__main__':
     # Problem1_plot()
     # Problem2()
     # Problem2_plot()
+    Problem3()
+    Problem3_plot()
         
         
     
