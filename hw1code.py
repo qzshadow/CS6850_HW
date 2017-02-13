@@ -7,6 +7,8 @@ Created on Wed Feb  8 11:53:13 2017
 
 import networkx as nx # import networkx 1.11
 from itertools import permutations
+from matplotlib import pyplot as plt
+import numpy as np
 from collections import Counter
 
 G = nx.Graph() # create a undirected graph
@@ -26,8 +28,25 @@ with open('papers.lst', mode='r', encoding = 'utf-8') as fin:
             author_set = set(x.strip() for x in author.split('&'))
             if len(author_set) > 1:
                 G.add_edges_from(permutations(author_set,2)) # avoid coauthors with the same name
+
+# attributions of Graph
+num_nodes = G.number_of_nodes()
+num_edges = G.number_of_edges()
+# for problem 1             
+degree_dict = nx.degree(G)
+max_degree = max(degree_dict.values())
+degree_counter = [[degree, sum(d == degree for d in degree_dict.values())] for degree in range(max_degree+1)]
             
-            
+ # for problem 2
+comp = nx.connected_components(G)
+# largest_cc = max(nx.connected_components(G), key=len)
+comp_len = [len(c) for c in sorted(comp, key = len, reverse = True)]
+max_comp_len = comp_len[0]
+sec_comp_len = comp_len[1]
+comp_len_counter = Counter(comp_len)
+num_cc = [[i, comp_len_counter[i]] for i in np.arange(1, sec_comp_len + 1)]
+
+           
 print('create graph from file done!')
 print('create a undirected graph with {0} nodes and {1} edges'.format(G.number_of_nodes(), G.number_of_edges()))
 
@@ -35,17 +54,46 @@ def writeHead():
     with open('hw1solution.txt', mode = 'w', encoding = 'utf-8') as fout:
         fout.write('zq32\n')
 
-def Problems1(G):
-    degree_dict = nx.degree(G)
-    max_degree = max(degree_dict.values())
-    degree_counter = [[degree, sum(d == degree for d in degree_dict.values())] for degree in range(max_degree+1)]
+def Problems1():
     with open('hw1solution.txt', mode = 'a', encoding = 'utf-8') as fout:
         fout.writelines(["@ 1 "+" ".join([str(l[0]), str(l[1])]) +"\n" for l in degree_counter])
 
+def Problem2():
+    with open('hw1solution.txt', mode = 'a', encoding = 'utf-8') as fout:
+        # for 2(a)
+        fout.writelines("@ 2 "+" ".join([str(max_comp_len), str(num_nodes), str(max_comp_len/num_nodes)]) + "\n")     
+        # for 2(b)
+        fout.writelines(["@ 2 "+" ".join([str(l[0]), str(l[1])]) + "\n" for l in num_cc])
+
+def Problem1_plot():
+    degree = np.array([l[0] for l in degree_counter if l[1] != 0])
+    counter = np.array([l[1] for l in degree_counter if l[1] != 0])
+    fig, ax = plt.subplots()
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('degree ($j$)')
+    ax.set_ylabel('num of nodes ($n_j$)')
+    ax.set_title('plot1: scatterplot for $(log j, log n_j)$')
+    ax.plot(degree, counter, 'ro')
+    
+def Problem2_plot():
+    cc = np.array([l[0] for l in num_cc])
+    n_cc = np.array([l[1] for l in num_cc])
+    fig, ax = plt.subplots()
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('size ($j$)')
+    ax.set_ylabel('num of connected comp ($k_j$)')
+    ax.set_title('plot1: scatterplot for $(log j, log k_j)$')
+    ax.plot(cc, n_cc, 'ro')    
+    
+
 if __name__ == '__main__':
-    writeHead()
-    Problems1(G)
-        
+    # writeHead()
+    # Problems1(G)
+    # Problem1_plot()
+    # Problem2()
+    # Problem2_plot()
         
         
     
