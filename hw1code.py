@@ -7,10 +7,12 @@ Created on Wed Feb  8 11:53:13 2017
 
 import networkx as nx # import networkx 1.11
 from itertools import permutations
+from matplotlib import pyplot as plt
+import numpy as np
 from collections import Counter
 
 G = nx.Graph() # create a undirected graph
-with open('papers.lst', mode='r', encoding = 'utf-8') as fin:
+with open('./papers.lst', mode='r', encoding = 'utf-8') as fin:
     for line in fin:
         try:
             year = int(line[:4])
@@ -41,6 +43,14 @@ def Problems1(G):
     degree_counter = [[degree, sum(d == degree for d in degree_dict.values())] for degree in range(max_degree+1)]
     with open('hw1solution.txt', mode = 'a', encoding = 'utf-8') as fout:
         fout.writelines(["@ 1 "+" ".join([str(l[0]), str(l[1])]) +"\n" for l in degree_counter])
+
+    degree = np.array(l[0] for l in degree_counter if l[1] != 0)
+    counter = np.array(l[1] for l in degree_counter if l[1] != 0)
+    fig, ax = plt.subplots()
+    ax.plot(degree, counter, 'ro')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
 
 if __name__ == '__main__':
     writeHead()
