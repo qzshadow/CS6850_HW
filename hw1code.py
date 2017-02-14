@@ -47,8 +47,20 @@ comp_len_counter = Counter(comp_len)
 num_cc = [[i, comp_len_counter[i]] for i in np.arange(1, sec_comp_len + 1)]
 
 # for problem 3
-node_path = nx.single_source_shortest_path_length(G, 'Hartmanis')
-path_counter = Counter(node_path.values())
+node_path_len = nx.single_source_shortest_path_length(G, 'Hartmanis') #key:lenght, value:target_point
+path_counter = Counter(node_path_len.values())
+
+# for problem 4
+depth_nodes = [[] for i in range(len(path_counter.keys()))]
+for key, val in node_path_len.items():
+    depth_nodes[val].append(key)
+res = []
+for j in np.arange(1,len(depth_nodes)):
+    parent_set = set(depth_nodes[j-1])
+    parent_num = 0
+    for node in depth_nodes[j]:
+        parent_num += len(set(G.neighbors(node)) & parent_set)
+    res.append(parent_num/len(depth_nodes[j]))
 
 
            
@@ -73,6 +85,10 @@ def Problem2():
 def Problem3():
     with open('hw1solution.txt', mode = 'a', encoding = 'utf-8') as fout:
         fout.writelines(["@ 3 " + " ".join([str(key), str(value)]) + "\n" for key, value in path_counter.items()])
+        
+def Problem4():
+    with open('hw1solution.txt', mode = 'a', encoding = 'utf-8') as fout:
+        fout.writelines(["@ 4 " + str(i) + "\n" for i in res])
 
 def Problem1_plot():
     degree = np.array([l[0] for l in degree_counter if l[1] != 0])
@@ -82,7 +98,7 @@ def Problem1_plot():
     ax.set_yscale('log')
     ax.set_xlabel('degree ($j$)')
     ax.set_ylabel('num of nodes ($n_j$)')
-    ax.set_title('plot1: scatterplot for $(log j, log n_j)$')
+    ax.set_title('Plot1: Scatterplot for $(log j, log n_j)$')
     ax.plot(degree, counter, 'ro')
     
 def Problem2_plot():
@@ -93,18 +109,26 @@ def Problem2_plot():
     ax.set_yscale('log')
     ax.set_xlabel('size ($j$)')
     ax.set_ylabel('num of connected comp ($k_j$)')
-    ax.set_title('plot2: scatterplot for $(log j, log k_j)$')
+    ax.set_title('Plot2: Scatterplot for $(log j, log k_j)$')
     ax.plot(cc, n_cc, 'ro')    
     
 def Problem3_plot():
     fig, ax = plt.subplots()
     # ax.set_xscale('log')
     # ax.set_yscale('log')
-    ax.set_xlabel('path lenght ($j$)')
+    ax.set_xlabel('path length ($j$)')
     ax.set_ylabel('num of nodes ($r_j$)')
-    ax.set_title('plot3: scatterplot for $(log j, log r_j)$')
+    ax.set_title('Plot3: Histogram plot for $(j, r_j)$')
     ax.set_xticks(list(path_counter.keys()))
     ax.bar(list(path_counter.keys()),list(path_counter.values()), facecolor='red')
+    
+def Problem4_plot():
+    fig, ax = plt.subplots()
+    ax.set_title('Plot4: Histogram plot for $(j, p_j)$')
+    ax.set_xlabel('path length ($j$)')
+    ax.set_ylabel('average number ($p_j$)')
+    ax.set_xticks(range(len(res) + 2))
+    ax.bar(np.arange(1,len(depth_nodes)), res, facecolor='red')
     
 
 if __name__ == '__main__':
@@ -113,8 +137,10 @@ if __name__ == '__main__':
     # Problem1_plot()
     # Problem2()
     # Problem2_plot()
-    Problem3()
-    Problem3_plot()
+    # Problem3()
+    # Problem3_plot()
+    Problem4()
+    Problem4_plot()
         
         
     
