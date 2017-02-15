@@ -121,7 +121,8 @@ def Problem3_plot():
     ax.set_ylabel('num of nodes ($r_j$)')
     ax.set_title('Plot3: Histogram plot for $(j, r_j)$')
     ax.set_xticks(list(path_counter.keys()))
-    ax.bar(list(path_counter.keys()),list(path_counter.values()), facecolor='red')
+    rects = ax.bar(list(path_counter.keys()),list(path_counter.values()), facecolor='red')
+    autolabel(rects, ax)
     
 def Problem4_plot():
     fig, ax = plt.subplots()
@@ -129,19 +130,30 @@ def Problem4_plot():
     ax.set_xlabel('path length ($j$)')
     ax.set_ylabel('average number ($p_j$)')
     ax.set_xticks(range(len(res) + 2))
-    ax.bar(np.arange(1,len(depth_nodes)), res, facecolor='red')
+    rects = ax.bar(np.arange(1,len(depth_nodes)), res, facecolor='red')
+    autolabel(rects, ax, False)
+    
+def autolabel(rects, ax, integer=True):
+    for rect in rects:
+        height = rect.get_height()
+        if(integer):
+            ax.text(rect.get_x() + rect.get_width()/2, height,
+                    "%d" % height, ha='center', va='bottom')
+        else:
+            ax.text(rect.get_x() + rect.get_width()/2, height,
+                    "%.2f" % height, ha='center', va='bottom')
     
 
 if __name__ == '__main__':
     # pass
-    # writeHead()
-    # Problems1(G)
+    writeHead()
+    Problems1()
     Problem1_plot()
-    # Problem2()
+    Problem2()
     Problem2_plot()
-    # Problem3()
+    Problem3()
     Problem3_plot()
-    # Problem4()
+    Problem4()
     Problem4_plot()
         
         
