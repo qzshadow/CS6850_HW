@@ -17,14 +17,15 @@ with open('papers.lst', mode='r', encoding = 'utf-8') as fin:
         try:
             year = int(line[:4])
         except ValueError:
-            #print(line) # generally, this is 19?? year
+            # print(line) # generally, this is 19?? year
             pass
         volumn_num, conference, author_title = line[6:8],line[11:22],line[24:]
         if year >= 1985 and year <= 2005:
             try:
                 author, title = author_title.split(',', maxsplit=1)
             except ValueError:
-                print(author_title) # generally, this title contains comma
+                #print(line) # generally, this title dose not contains authors or titles
+                pass
             author_set = set(x.strip() for x in author.split('&'))
             if len(author_set) > 1:
                 G.add_edges_from(permutations(author_set,2)) # avoid coauthors with the same name
@@ -132,14 +133,15 @@ def Problem4_plot():
     
 
 if __name__ == '__main__':
+    # pass
     # writeHead()
     # Problems1(G)
-    # Problem1_plot()
+    Problem1_plot()
     # Problem2()
-    # Problem2_plot()
+    Problem2_plot()
     # Problem3()
-    # Problem3_plot()
-    Problem4()
+    Problem3_plot()
+    # Problem4()
     Problem4_plot()
         
         
