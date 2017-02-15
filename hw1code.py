@@ -85,11 +85,13 @@ def Problem2():
         
 def Problem3():
     with open('hw1solution.txt', mode = 'a', encoding = 'utf-8') as fout:
-        fout.writelines(["@ 3 " + " ".join([str(key), str(value)]) + "\n" for key, value in path_counter.items()])
+        for key, value in path_counter.items():
+            if key != 0:
+                    fout.writelines(["@ 3 " + " ".join([str(key), str(value)]) + "\n"])
         
 def Problem4():
     with open('hw1solution.txt', mode = 'a', encoding = 'utf-8') as fout:
-        fout.writelines(["@ 4 " + str(i) + "\n" for i in res])
+        fout.writelines(["@ 4 " + str(i+1) + " " + str(j) + "\n" for i,j in enumerate(res)])
 
 def Problem1_plot():
     degree = np.array([l[0] for l in degree_counter if l[1] != 0])
@@ -121,7 +123,7 @@ def Problem3_plot():
     ax.set_ylabel('num of nodes ($r_j$)')
     ax.set_title('Plot3: Histogram plot for $(j, r_j)$')
     ax.set_xticks(list(path_counter.keys()))
-    rects = ax.bar(list(path_counter.keys()),list(path_counter.values()), facecolor='red')
+    rects = ax.bar(list(path_counter.keys())[1:],list(path_counter.values())[1:], facecolor='red')
     autolabel(rects, ax)
     
 def Problem4_plot():
