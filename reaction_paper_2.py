@@ -167,7 +167,8 @@ num_nodes = 15
 sparse = 0.2
 steps = 10
 
-debug = False
+is_debug = False
+is_plot = False
 if debug:
     G = nx.read_gpickle('graph.pk')
 else:
@@ -195,8 +196,8 @@ else:
 
 pos = nx.spring_layout(G)
 G2 = G.copy()
-graph_naive_iterate(G, steps, True, debug)
-graph_iterate(G2, steps, True, debug)
+graph_naive_iterate(G, steps, is_plot, is_debug)
+graph_iterate(G2, steps, is_plot, is_debug)
 
     
     
