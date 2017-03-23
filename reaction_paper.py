@@ -67,26 +67,15 @@ def graph_naive_iterate(G, steps, plot=False):
                 else:
                     neibor_color_idx = np.argmax(neibor_attr)
                     if neibor_color_idx == 0:
-                        if node_color_idx == 0 or node_color_idx == 2:
-                            G.node[idx]['temp'][0] += A
-                        elif node_color_idx == 1:
-                            pass
-                        else:
-                            raise ValueError
+                        G.node[idx]['temp'][0] += A
+                        G.node[idx]['temp'][2] += A
                     elif neibor_color_idx == 1:
-                        if node_color_idx == 1 or node_color_idx == 2:
-                            G.node[idx]['temp'][1] += B
-                        elif node_color_idx == 0:
-                            pass
-                        else:
-                            raise ValueError
+                        G.node[idx]['temp'][1] += B
+                        G.node[idx]['temp'][2] += B
                     elif neibor_color_idx == 2:
-                        if node_color_idx == 0:
-                            G.node[idx]['temp'][0] += A
-                        elif node_color_idx == 1:
-                            G.node[idx]['temp'][1] += B
-                        elif node_color_idx == 2:
-                            G.node[idx]['temp'][2] += max(A, B)
+                        G.node[idx]['temp'][0] += A
+                        G.node[idx]['temp'][1] += B
+                        G.node[idx]['temp'][2] += max(A, B)
             if G.node[idx]['temp'][2] != 0:
                 G.node[idx]['temp'][2] += AB
                             
