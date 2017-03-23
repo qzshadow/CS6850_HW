@@ -154,6 +154,9 @@ def graph_iterate(G, steps, plot=False, debug=False):
                 G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
             else:
                 res = G.node[idx]['temp']/sum(G.node[idx]['temp'])
+                if (res[0]<G.node[idx]['attr'][0]):
+                    G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
+                    continue
                 G.node[idx]['attr'] = res
                 G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
                 
@@ -162,16 +165,16 @@ def graph_iterate(G, steps, plot=False, debug=False):
             
         
 # initialize process
-A = 1
-B = 2
+A = 2
+B = 1
 AB = -.5
 
-num_nodes = 15
-sparse = 0.2
+num_nodes = 6
+sparse = 0.1
 steps = 10
 
 is_debug = False
-is_plot = False
+is_plot = True
 if is_debug:
     G = nx.read_gpickle('graph.pk')
 else:
@@ -201,6 +204,10 @@ pos = nx.spring_layout(G)
 G2 = G.copy()
 graph_naive_iterate(G, steps, is_plot, is_debug)
 graph_iterate(G2, steps, is_plot, is_debug)
+
+# 
+#H = nx.Graph()
+#H.add_edges_from([1,2,3,4,5])
 
     
     
