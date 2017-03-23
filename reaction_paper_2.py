@@ -81,8 +81,7 @@ def graph_naive_iterate(G, steps, plot=False, debug=False):
                         G.node[idx]['temp'][0] += A
                         G.node[idx]['temp'][1] += B
                         G.node[idx]['temp'][2] += max(A, B)
-            if G.node[idx]['temp'][2] != 0:
-                G.node[idx]['temp'][2] += AB
+            G.node[idx]['temp'][2] += AB
                             
                             
     # phase 2 for every node update it's attr according to its temp
@@ -101,6 +100,8 @@ def graph_naive_iterate(G, steps, plot=False, debug=False):
     plt.show()
                 
 def graph_iterate(G, steps, plot=False, debug=False):
+    prob_A = []
+    node_A = []
     for t in range(steps):
         if plot:
             h = int(np.sqrt(steps))
@@ -140,8 +141,7 @@ def graph_iterate(G, steps, plot=False, debug=False):
                         G.node[idx]['temp'][0] += neibor_attr[2] * A
                         G.node[idx]['temp'][1] += neibor_attr[2] * B
                         G.node[idx]['temp'][2] += neibor_attr[2] * max(A, B)
-            if G.node[idx]['temp'][2] - 0 > 1e-1:
-                G.node[idx]['temp'][2] += AB
+            G.node[idx]['temp'][2] += AB
                 
         
     # phase 2 
@@ -156,6 +156,9 @@ def graph_iterate(G, steps, plot=False, debug=False):
                 res = G.node[idx]['temp']/sum(G.node[idx]['temp'])
                 G.node[idx]['attr'] = res
                 G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
+                
+    # statistics
+        
             
         
 # initialize process
