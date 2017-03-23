@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Spyder Editor
-
-This is a temporary script file.
+reaction paper code for CS6850
+author: zq32 @ Cornell
 """
 
 import networkx as nx
@@ -48,14 +47,14 @@ contains bugs
 def graph_naive_iterate(G, steps, plot=False):
     pos = nx.spring_layout(G)
     for t in range(steps):
-        
-    # phase 1 for every node update it's temp according to it's neibor's attr
-        if plot:
+                if plot:
             h = int(np.sqrt(steps))
             plt.subplot(h, ceil(step / h), t + 1)
             nx.draw_networkx(G, pos, node_color=get_node_color(G, 'attr'))
             plt.axis('off')
             plt.show()
+        
+    # phase 1 for every node update it's temp according to it's neibor's attr
         for idx in G.nodes():
             node = G.node[idx]
             node_attr = node['attr']
