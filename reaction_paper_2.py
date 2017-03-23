@@ -54,7 +54,8 @@ def graph_naive_iterate(G, steps, plot=False, debug=False):
             h = int(np.sqrt(steps))
             plt.subplot(h,ceil(steps / h),t + 1)
             n_size = 200 if debug else 30
-            nx.draw_networkx(G, pos, node_color=get_node_color(G, 'attr'), with_labels = debug, node_size=n_size)
+            nx.draw_networkx_nodes(G, pos, node_color=get_node_color(G, 'attr'), with_labels = debug, node_size=n_size)
+            nx.draw_networkx_edges(G, pos, width = 0.5, alpha=0.8)
             plt.axis('off')
 #            plt.show()
         
@@ -105,7 +106,8 @@ def graph_iterate(G, steps, plot=False, debug=False):
             h = int(np.sqrt(steps))
             plt.subplot(h,ceil(steps / h),t + 1)
             n_size = 200 if debug else 30
-            nx.draw_networkx(G, pos, node_color=get_node_color(G, 'attr'), with_labels = debug, node_size=n_size)
+            nx.draw_networkx_nodes(G, pos, node_color=get_node_color(G, 'attr'), with_labels = debug, node_size=n_size)
+            nx.draw_networkx_edges(G, pos, width = 0.5, alpha=0.8)
             plt.axis('off')
             if debug:
                 plt.show()
