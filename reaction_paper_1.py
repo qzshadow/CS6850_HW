@@ -50,7 +50,7 @@ def graph_naive_iterate(G, steps, plot=False, debug=False):
         if plot:
             h = int(np.sqrt(steps))
             plt.subplot(h,ceil(steps / h),t + 1)
-            n_size = 200 if debug else 50
+            n_size = 200 if debug else 30
             nx.draw_networkx(G, pos, node_color=get_node_color(G, 'attr'), with_labels = debug, node_size=n_size)
             plt.axis('off')
 #            plt.show()
@@ -101,7 +101,7 @@ def graph_iterate(G, steps, plot=False, debug=False):
         if plot:
             h = int(np.sqrt(steps))
             plt.subplot(h,ceil(steps / h),t + 1)
-            n_size = 200 if debug else 50
+            n_size = 200 if debug else 30
             nx.draw_networkx(G, pos, node_color=get_node_color(G, 'attr'), with_labels = debug, node_size=n_size)
             plt.axis('off')
             if debug:
@@ -151,8 +151,6 @@ def graph_iterate(G, steps, plot=False, debug=False):
                 res = G.node[idx]['temp']/sum(G.node[idx]['temp'])
                 G.node[idx]['attr'] = res
                 G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
-                
-    plt.show()
             
         
 # initialize process
@@ -160,8 +158,9 @@ A = 1
 B = 2
 AB = -.5
 
+num_nodes = 15
+steps = 10
 
-num_nodes = 10
 debug = False
 if debug:
     G = nx.read_gpickle('graph.pk')
@@ -178,7 +177,6 @@ else:
     a_init = ceil(0.1 * num_nodes)
     b_init = ceil(0.1 * num_nodes)
     
-    steps = 10
     random_nodes = choice(num_nodes, a_init + b_init, replace=False)
     a_init_nodes_idx = random_nodes[:a_init]
     b_init_nodes_idx = random_nodes[a_init:a_init+b_init]
