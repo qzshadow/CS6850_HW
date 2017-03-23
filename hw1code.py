@@ -17,14 +17,15 @@ with open('papers.lst', mode='r', encoding = 'utf-8') as fin:
         try:
             year = int(line[:4])
         except ValueError:
-            #print(line) # generally, this is 19?? year
+            # print(line) # generally, this is 19?? year
             pass
         volumn_num, conference, author_title = line[6:8],line[11:22],line[24:]
         if year >= 1985 and year <= 2005:
             try:
                 author, title = author_title.split(',', maxsplit=1)
             except ValueError:
-                print(author_title) # generally, this title contains comma
+                #print(line) # generally, this title dose not contains authors or titles
+                pass
             author_set = set(x.strip() for x in author.split('&'))
             if len(author_set) > 1:
                 G.add_edges_from(permutations(author_set,2)) # avoid coauthors with the same name
@@ -84,11 +85,13 @@ def Problem2():
         
 def Problem3():
     with open('hw1solution.txt', mode = 'a', encoding = 'utf-8') as fout:
-        fout.writelines(["@ 3 " + " ".join([str(key), str(value)]) + "\n" for key, value in path_counter.items()])
+        for key, value in path_counter.items():
+            if key != 0:
+                    fout.writelines(["@ 3 " + " ".join([str(key), str(value)]) + "\n"])
         
 def Problem4():
     with open('hw1solution.txt', mode = 'a', encoding = 'utf-8') as fout:
-        fout.writelines(["@ 4 " + str(i) + "\n" for i in res])
+        fout.writelines(["@ 4 " + str(i+1) + " " + str(j) + "\n" for i,j in enumerate(res)])
 
 def Problem1_plot():
     degree = np.array([l[0] for l in degree_counter if l[1] != 0])
@@ -120,7 +123,8 @@ def Problem3_plot():
     ax.set_ylabel('num of nodes ($r_j$)')
     ax.set_title('Plot3: Histogram plot for $(j, r_j)$')
     ax.set_xticks(list(path_counter.keys()))
-    ax.bar(list(path_counter.keys()),list(path_counter.values()), facecolor='red')
+    rects = ax.bar(list(path_counter.keys())[1:],list(path_counter.values())[1:], facecolor='red')
+    autolabel(rects, ax)
     
 def Problem4_plot():
     fig, ax = plt.subplots()
@@ -128,17 +132,29 @@ def Problem4_plot():
     ax.set_xlabel('path length ($j$)')
     ax.set_ylabel('average number ($p_j$)')
     ax.set_xticks(range(len(res) + 2))
-    ax.bar(np.arange(1,len(depth_nodes)), res, facecolor='red')
+    rects = ax.bar(np.arange(1,len(depth_nodes)), res, facecolor='red')
+    autolabel(rects, ax, False)
+    
+def autolabel(rects, ax, integer=True):
+    for rect in rects:
+        height = rect.get_height()
+        if(integer):
+            ax.text(rect.get_x() + rect.get_width()/2, height,
+                    "%d" % height, ha='center', va='bottom')
+        else:
+            ax.text(rect.get_x() + rect.get_width()/2, height,
+                    "%.2f" % height, ha='center', va='bottom')
     
 
 if __name__ == '__main__':
-    # writeHead()
-    # Problems1(G)
-    # Problem1_plot()
-    # Problem2()
-    # Problem2_plot()
-    # Problem3()
-    # Problem3_plot()
+    # pass
+    writeHead()
+    Problems1()
+    Problem1_plot()
+    Problem2()
+    Problem2_plot()
+    Problem3()
+    Problem3_plot()
     Problem4()
     Problem4_plot()
         
