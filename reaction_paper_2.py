@@ -54,7 +54,9 @@ def graph_naive_iterate(G, steps, plot=False, debug=False):
             h = int(np.sqrt(steps))
             plt.subplot(h,ceil(steps / h),t + 1)
             n_size = 200 if debug else 30
-            nx.draw_networkx_nodes(G, pos, node_color=get_node_color(G, 'attr'), with_labels = debug, node_size=n_size)
+            nx.draw_networkx_nodes(G, pos, node_color=get_node_color(G, 'attr'), node_size=n_size)
+            if debug:
+                nx.draw_networkx_labels(G, pos)
             nx.draw_networkx_edges(G, pos, width = 0.5, alpha=0.8)
             plt.axis('off')
 #            plt.show()
@@ -102,7 +104,9 @@ def graph_iterate(G, steps, plot=False, debug=False):
             h = int(np.sqrt(steps))
             plt.subplot(h,ceil(steps / h),t + 1)
             n_size = 200 if debug else 30
-            nx.draw_networkx_nodes(G, pos, node_color=get_node_color(G, 'attr'), with_labels = debug, node_size=n_size)
+            nx.draw_networkx_nodes(G, pos, node_color=get_node_color(G, 'attr'), node_size=n_size)
+            if debug:
+                nx.draw_networkx_labels(G, pos)
             nx.draw_networkx_edges(G, pos, width = 0.5, alpha=0.8)
             plt.axis('off')
             if debug:
@@ -133,7 +137,14 @@ def graph_iterate(G, steps, plot=False, debug=False):
                 G.node[idx]['temp'][1] += neibor_attr[2] * B
                 G.node[idx]['temp'][2] += neibor_attr[2] * max(A, B)
             G.node[idx]['temp'][2] += AB
-        print(G.node[5])
+        
+        print('0 :', G.node[0])
+        print('1 :', G.node[1])
+        print('3 :', G.node[3])
+        print('4 :', G.node[4])
+        print('7 :', G.node[7])
+        print('10 :', G.node[10])        
+#        print('2 :', G.node[2])
                 
         
     # phase 2 
@@ -154,72 +165,73 @@ def graph_iterate(G, steps, plot=False, debug=False):
     plt.show()
             
         
-#==============================================================================
-# # initialize process
-# A = 2
-# B = 1
-# AB = -.5
-# 
-# num_nodes = 6
-# sparse = 0.1
-# steps = 10
-# 
-# is_debug = False
-# is_plot = True
-# if is_debug:
-#     G = nx.read_gpickle('graph.pk')
-# else:
-#     while(True):
-#         G = nx.gnp_random_graph(num_nodes, sparse)
-#         if nx.is_connected(G):
-#             break
-#     for node_idx in G.nodes():
-#         G.node[node_idx]['attr'] = np.array([0,0,0], dtype='f')
-#         G.node[node_idx]['temp'] = np.array([0,0,0], dtype='f')
-#     #nx.set_node_attributes(G, "t", 0)
-#     # initialize infections
-#     a_init = ceil(0.1 * num_nodes)
-#     
-#     random_nodes = choice(num_nodes, a_init, replace=False)
-#     a_init_nodes_idx = random_nodes[:a_init]
-#     
-#     for i in a_init_nodes_idx:
-#         G.node[i]['attr'] = np.array([1,0,0],dtype='f')
-#     for i in G.nodes():
-#         if i not in a_init_nodes_idx:
-#             G.node[i]['attr'] = np.array([0,1,0], dtype='f')
-#         
-#     nx.write_gpickle(G, 'graph.pk')
-# 
-# pos = nx.spring_layout(G)
-# G2 = G.copy()
-# graph_naive_iterate(G, steps, is_plot, is_debug)
-# graph_iterate(G2, steps, is_plot, is_debug)
-#==============================================================================
+# initialize process
+A = 2
+B = 1
+AB = -.5
 
+num_nodes = 12
+sparse = 0.2
+steps = 12
 
-H = nx.Graph()
-H.add_edges_from([(0,1), (1,2), (0,2), (2,3), (3,4),(3,5),(4,5)])
-pos = nx.spring_layout(H)
-nx.draw_networkx(H, pos)
-for idx in H.nodes():
-    H.node[idx]['attr'] = np.array([0, 0, 0], dtype='f')
-    H.node[idx]['temp'] = np.array([0, 0, 0], dtype='f')    
+is_debug = True
+is_plot = True
+if is_debug:
+    G = nx.read_gpickle('graph.pk')
+else:
+    while(True):
+        G = nx.gnp_random_graph(num_nodes, sparse)
+        if nx.is_connected(G):
+            break
+    for node_idx in G.nodes():
+        G.node[node_idx]['attr'] = np.array([0,0,0], dtype='f')
+        G.node[node_idx]['temp'] = np.array([0,0,0], dtype='f')
+    #nx.set_node_attributes(G, "t", 0)
+    # initialize infections
+    a_init = ceil(0.1 * num_nodes)
     
-a_init_nodes_idx = [3]
-for i in a_init_nodes_idx:
-    H.node[i]['attr'] = np.array([1,0,0], dtype='f')
-for i in G.nodes():
-    if i not in a_init_nodes_idx:
-        H.node[i]['attr'] = np.array([0,1,0], dtype='f')
+    random_nodes = choice(num_nodes, a_init, replace=False)
+    a_init_nodes_idx = random_nodes[:a_init]
+    
+    for i in a_init_nodes_idx:
+        G.node[i]['attr'] = np.array([1,0,0],dtype='f')
+    for i in G.nodes():
+        if i not in a_init_nodes_idx:
+            G.node[i]['attr'] = np.array([0,1,0], dtype='f')
         
-A = 4
-B = 2
-AB = -1
+    nx.write_gpickle(G, 'graph.pk')
 
-H2 = H.copy()
-#graph_naive_iterate(H2, 4, True, False)
-graph_iterate(H, 4, True, True)
+pos = nx.spring_layout(G)
+G2 = G.copy()
+#graph_naive_iterate(G, steps, is_plot, is_debug)
+graph_iterate(G2, steps, is_plot, is_debug)
+
+
+#==============================================================================
+# H = nx.Graph()
+# H.add_edges_from([(0,1), (1,2), (0,2), (2,3), (3,4),(3,5),(4,5)])
+# pos = nx.spring_layout(H)
+# nx.draw_networkx(H, pos)
+# for idx in H.nodes():
+#     H.node[idx]['attr'] = np.array([0, 0, 0], dtype='f')
+#     H.node[idx]['temp'] = np.array([0, 0, 0], dtype='f')    
+#     
+# a_init_nodes_idx = [3]
+# for i in a_init_nodes_idx:
+#     H.node[i]['attr'] = np.array([1,0,0], dtype='f')
+# for i in G.nodes():
+#     if i not in a_init_nodes_idx:
+#         H.node[i]['attr'] = np.array([0,1,0], dtype='f')
+#         
+# A = 4
+# B = 2
+# AB = -1
+# 
+# H2 = H.copy()
+# steps = 8
+# graph_naive_iterate(H2, steps, True, False)
+# graph_iterate(H, steps, True, False)
+#==============================================================================
 
 
 
