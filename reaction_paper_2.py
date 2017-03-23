@@ -67,20 +67,17 @@ def graph_naive_iterate(G, steps, plot=False, debug=False):
             for neibor_idx in G.neighbors(idx):
                 neibor_node = G.node[neibor_idx]
                 neibor_attr = neibor_node['attr']
-                if np.array_equal(np.array([0,0,0]), neibor_attr): # if neibor is unknown point
-                    continue
-                else:
-                    neibor_color_idx = np.argmax(neibor_attr)
-                    if neibor_color_idx == 0:
-                        G.node[idx]['temp'][0] += A
-                        G.node[idx]['temp'][2] += A
-                    elif neibor_color_idx == 1:
-                        G.node[idx]['temp'][1] += B
-                        G.node[idx]['temp'][2] += B
-                    elif neibor_color_idx == 2:
-                        G.node[idx]['temp'][0] += A
-                        G.node[idx]['temp'][1] += B
-                        G.node[idx]['temp'][2] += max(A, B)
+                neibor_color_idx = np.argmax(neibor_attr)
+                if neibor_color_idx == 0:
+                    G.node[idx]['temp'][0] += A
+                    G.node[idx]['temp'][2] += A
+                elif neibor_color_idx == 1:
+                    G.node[idx]['temp'][1] += B
+                    G.node[idx]['temp'][2] += B
+                elif neibor_color_idx == 2:
+                    G.node[idx]['temp'][0] += A
+                    G.node[idx]['temp'][1] += B
+                    G.node[idx]['temp'][2] += max(A, B)
             G.node[idx]['temp'][2] += AB
                             
                             
@@ -88,20 +85,18 @@ def graph_naive_iterate(G, steps, plot=False, debug=False):
         for idx in G.nodes():
             node = G.node[idx]
             node_attr = node['temp']
-            if np.array_equal(node_attr, np.array([0, 0 ,0])):
-                continue
-            elif G.node[idx]['attr'][0] == 1:
-                G.node[idx]['temp'] = np.array([0,0,0])
+            if G.node[idx]['attr'][0] == 1:
+                G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
             else:
-                res = np.array([0,0,0])
+                res = np.array([0,0,0], dtype='f')
                 res[np.argmax(node_attr)] = 1
                 G.node[idx]['attr'] = res
-                G.node[idx]['temp'] = np.array([0,0,0])
+                G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
     plt.show()
                 
 def graph_iterate(G, steps, plot=False, debug=False):
-    prob_A = []
-    node_A = []
+#    prob_A = []
+#    node_A = []
     for t in range(steps):
         if plot:
             h = int(np.sqrt(steps))
@@ -127,30 +122,25 @@ def graph_iterate(G, steps, plot=False, debug=False):
             for neibor_idx in G.neighbors(idx):
                 neibor_node = G.node[neibor_idx]
                 neibor_attr = neibor_node['attr']
-                if np.array_equal(np.array([0,0,0], dtype='f'), neibor_attr):
-                    continue
-                else:
-                    neibor_color_idx = np.argmax(neibor_attr)
-                    if neibor_color_idx == 0:
-                        G.node[idx]['temp'][0] += neibor_attr[0] * A
-                        G.node[idx]['temp'][2] += neibor_attr[0] * A
-                    elif neibor_color_idx == 1:
-                        G.node[idx]['temp'][1] += neibor_attr[1] * B
-                        G.node[idx]['temp'][2] += neibor_attr[1] * B
-                    elif neibor_color_idx == 2:
-                        G.node[idx]['temp'][0] += neibor_attr[2] * A
-                        G.node[idx]['temp'][1] += neibor_attr[2] * B
-                        G.node[idx]['temp'][2] += neibor_attr[2] * max(A, B)
+
+                G.node[idx]['temp'][0] += neibor_attr[0] * A
+                G.node[idx]['temp'][2] += neibor_attr[0] * A
+
+                G.node[idx]['temp'][1] += neibor_attr[1] * B
+                G.node[idx]['temp'][2] += neibor_attr[1] * B
+
+                G.node[idx]['temp'][0] += neibor_attr[2] * A
+                G.node[idx]['temp'][1] += neibor_attr[2] * B
+                G.node[idx]['temp'][2] += neibor_attr[2] * max(A, B)
             G.node[idx]['temp'][2] += AB
+        print(G.node[5])
                 
         
     # phase 2 
         for idx in G.nodes():
             node = G.node[idx]
             node_attr = node['temp']
-            if np.array_equal(node_attr, np.array([0, 0 ,0], dtype='f')):
-                continue
-            elif np.argmax(G.node[idx]['attr']) == 0 and G.node[idx]['attr'][0] != 0:
+            if np.argmax(G.node[idx]['attr']) == 0 and G.node[idx]['attr'][0] != 0:
                 G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
             else:
                 res = G.node[idx]['temp']/sum(G.node[idx]['temp'])
@@ -161,57 +151,60 @@ def graph_iterate(G, steps, plot=False, debug=False):
                 G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
                 
     # statistics
-        
+    plt.show()
             
         
-# initialize process
-A = 2
-B = 1
-AB = -.5
-
-num_nodes = 6
-sparse = 0.1
-steps = 10
-
-is_debug = False
-is_plot = True
-if is_debug:
-    G = nx.read_gpickle('graph.pk')
-else:
-    while(True):
-        G = nx.gnp_random_graph(num_nodes, sparse)
-        if nx.is_connected(G):
-            break
-    for node_idx in G.nodes():
-        G.node[node_idx]['attr'] = np.array([0, 0, 0])
-        G.node[node_idx]['temp'] = np.array([0, 0, 0])
-    #nx.set_node_attributes(G, "t", 0)
-    # initialize infections
-    a_init = ceil(0.1 * num_nodes)
-    
-    random_nodes = choice(num_nodes, a_init, replace=False)
-    a_init_nodes_idx = random_nodes[:a_init]
-    
-    for i in a_init_nodes_idx:
-        G.node[i]['attr'] = np.array([1,0,0])
-    for i in G.nodes():
-        if i not in a_init_nodes_idx:
-            G.node[i]['attr'] = np.array([0,1,0])
-        
-    nx.write_gpickle(G, 'graph.pk')
-
-pos = nx.spring_layout(G)
-G2 = G.copy()
-graph_naive_iterate(G, steps, is_plot, is_debug)
-graph_iterate(G2, steps, is_plot, is_debug)
-
+#==============================================================================
+# # initialize process
+# A = 2
+# B = 1
+# AB = -.5
 # 
+# num_nodes = 6
+# sparse = 0.1
+# steps = 10
+# 
+# is_debug = False
+# is_plot = True
+# if is_debug:
+#     G = nx.read_gpickle('graph.pk')
+# else:
+#     while(True):
+#         G = nx.gnp_random_graph(num_nodes, sparse)
+#         if nx.is_connected(G):
+#             break
+#     for node_idx in G.nodes():
+#         G.node[node_idx]['attr'] = np.array([0,0,0], dtype='f')
+#         G.node[node_idx]['temp'] = np.array([0,0,0], dtype='f')
+#     #nx.set_node_attributes(G, "t", 0)
+#     # initialize infections
+#     a_init = ceil(0.1 * num_nodes)
+#     
+#     random_nodes = choice(num_nodes, a_init, replace=False)
+#     a_init_nodes_idx = random_nodes[:a_init]
+#     
+#     for i in a_init_nodes_idx:
+#         G.node[i]['attr'] = np.array([1,0,0],dtype='f')
+#     for i in G.nodes():
+#         if i not in a_init_nodes_idx:
+#             G.node[i]['attr'] = np.array([0,1,0], dtype='f')
+#         
+#     nx.write_gpickle(G, 'graph.pk')
+# 
+# pos = nx.spring_layout(G)
+# G2 = G.copy()
+# graph_naive_iterate(G, steps, is_plot, is_debug)
+# graph_iterate(G2, steps, is_plot, is_debug)
+#==============================================================================
+
+
 H = nx.Graph()
 H.add_edges_from([(0,1), (1,2), (0,2), (2,3), (3,4),(3,5),(4,5)])
-nx.draw_networkx(H)
+pos = nx.spring_layout(H)
+nx.draw_networkx(H, pos)
 for idx in H.nodes():
-    H.node[node_idx]['attr'] = np.array([0, 0, 0], dtype='f')
-    H.node[node_idx]['temp'] = np.array([0, 0, 0], dtype='f')    
+    H.node[idx]['attr'] = np.array([0, 0, 0], dtype='f')
+    H.node[idx]['temp'] = np.array([0, 0, 0], dtype='f')    
     
 a_init_nodes_idx = [3]
 for i in a_init_nodes_idx:
@@ -220,10 +213,14 @@ for i in G.nodes():
     if i not in a_init_nodes_idx:
         H.node[i]['attr'] = np.array([0,1,0], dtype='f')
         
-A = B = 1
-AB = -0.5
+A = 4
+B = 2
+AB = -1
 
-graph_iterate(H, 10, True, False)
+H2 = H.copy()
+#graph_naive_iterate(H2, 4, True, False)
+graph_iterate(H, 4, True, True)
+
 
 
     
