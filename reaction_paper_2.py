@@ -169,7 +169,7 @@ steps = 10
 
 is_debug = False
 is_plot = False
-if debug:
+if is_debug:
     G = nx.read_gpickle('graph.pk')
 else:
     while(True):
