@@ -206,8 +206,25 @@ graph_naive_iterate(G, steps, is_plot, is_debug)
 graph_iterate(G2, steps, is_plot, is_debug)
 
 # 
-#H = nx.Graph()
-#H.add_edges_from([1,2,3,4,5])
+H = nx.Graph()
+H.add_edges_from([(0,1), (1,2), (0,2), (2,3), (3,4),(3,5),(4,5)])
+nx.draw_networkx(H)
+for idx in H.nodes():
+    H.node[node_idx]['attr'] = np.array([0, 0, 0], dtype='f')
+    H.node[node_idx]['temp'] = np.array([0, 0, 0], dtype='f')    
+    
+a_init_nodes_idx = [3]
+for i in a_init_nodes_idx:
+    H.node[i]['attr'] = np.array([1,0,0], dtype='f')
+for i in G.nodes():
+    if i not in a_init_nodes_idx:
+        H.node[i]['attr'] = np.array([0,1,0], dtype='f')
+        
+A = B = 1
+AB = -0.5
+
+graph_iterate(H, 10, True, False)
+
 
     
     
