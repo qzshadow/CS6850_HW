@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 reaction paper code for CS6850
+network version for bilingal cascade
+assumpt that the innovation product cannot be replaced by old ones 
 author: zq32 @ Cornell
 """
 
@@ -86,21 +88,23 @@ def graph_naive_iterate(G, steps, plot=False):
             node_attr = node['temp']
             if np.array_equal(node_attr, np.array([0, 0 ,0])):
                 continue
+            elif G.node[idx]['attr'][0] == 1:
+                G.node[idx]['temp'] = np.array([0,0,0])
             else:
                 res = np.array([0,0,0])
-                G.node[idx]['temp'] = np.array([0,0,0])
                 res[np.argmax(node_attr)] = 1
                 G.node[idx]['attr'] = res
+                G.node[idx]['temp'] = np.array([0,0,0])
                 
                 
         
 # initialize process
-A = 2
-B = 1
+A = 1
+B = 2
 AB = -1
 
 
-num_nodes = 9
+num_nodes = 6
 
 while(True):
     G = nx.gnp_random_graph(num_nodes, 0.3)
