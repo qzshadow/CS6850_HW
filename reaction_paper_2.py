@@ -138,12 +138,12 @@ def graph_iterate(G, steps, plot=False, debug=False):
                 G.node[idx]['temp'][2] += neibor_attr[2] * max(A, B)
             G.node[idx]['temp'][2] += AB
         
-        print('0 :', G.node[0])
-        print('1 :', G.node[1])
-        print('3 :', G.node[3])
-        print('4 :', G.node[4])
-        print('7 :', G.node[7])
-        print('10 :', G.node[10])        
+#        print('0 :', G.node[0])
+#        print('1 :', G.node[1])
+#        print('3 :', G.node[3])
+#        print('4 :', G.node[4])
+#        print('7 :', G.node[7])
+#        print('10 :', G.node[10])        
 #        print('2 :', G.node[2])
                 
         
@@ -151,15 +151,12 @@ def graph_iterate(G, steps, plot=False, debug=False):
         for idx in G.nodes():
             node = G.node[idx]
             node_attr = node['temp']
-            if np.argmax(G.node[idx]['attr']) == 0 and G.node[idx]['attr'][0] != 0:
+            res = G.node[idx]['temp']/sum(G.node[idx]['temp'])
+            if (res[0]<G.node[idx]['attr'][0]):
                 G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
-            else:
-                res = G.node[idx]['temp']/sum(G.node[idx]['temp'])
-                if (res[0]<G.node[idx]['attr'][0]):
-                    G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
-                    continue
-                G.node[idx]['attr'] = res
-                G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
+                continue
+            G.node[idx]['attr'] = res
+            G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
                 
     # statistics
     plt.show()
@@ -174,7 +171,7 @@ num_nodes = 12
 sparse = 0.2
 steps = 12
 
-is_debug = True
+is_debug = False
 is_plot = True
 if is_debug:
     G = nx.read_gpickle('graph.pk')
@@ -203,7 +200,7 @@ else:
 
 pos = nx.spring_layout(G)
 G2 = G.copy()
-#graph_naive_iterate(G, steps, is_plot, is_debug)
+graph_naive_iterate(G, steps, is_plot, is_debug)
 graph_iterate(G2, steps, is_plot, is_debug)
 
 
@@ -219,7 +216,7 @@ graph_iterate(G2, steps, is_plot, is_debug)
 # a_init_nodes_idx = [3]
 # for i in a_init_nodes_idx:
 #     H.node[i]['attr'] = np.array([1,0,0], dtype='f')
-# for i in G.nodes():
+# for i in H.nodes():
 #     if i not in a_init_nodes_idx:
 #         H.node[i]['attr'] = np.array([0,1,0], dtype='f')
 #         
