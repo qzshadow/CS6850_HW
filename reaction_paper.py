@@ -47,9 +47,9 @@ contains bugs
 def graph_naive_iterate(G, steps, plot=False):
     pos = nx.spring_layout(G)
     for t in range(steps):
-                if plot:
+        if plot:
             h = int(np.sqrt(steps))
-            plt.subplot(h, ceil(step / h), t + 1)
+            plt.subplot(h, ceil(steps / h), t + 1)
             nx.draw_networkx(G, pos, node_color=get_node_color(G, 'attr'))
             plt.axis('off')
             plt.show()
