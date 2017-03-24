@@ -228,32 +228,34 @@ for i in H.nodes():
     if i not in a_init_nodes_idx:
         H.node[i]['attr'] = np.array([0,1,0], dtype='f')
         
-#A = 1.2
-#B = 1
-#AB = -1
-#Delta = 1.
-#
-#H2 = H.copy()
-#steps = 8
-#graph_naive_iterate(H2, steps, A, B, AB, True, False)
-#graph_iterate(H, steps, A, B, AB, True, False)
+A = 1.5
+B = 1
+AB = -1
+Delta = 1.
+
+H2 = H.copy()
+steps = 8
+graph_naive_iterate(H2, steps, A, B, AB, True, False)
+graph_iterate(H, steps, A, B, AB, True, False)
 
 
-A_min, A_max = 1, 5
-AB_min, AB_max = 0, 5
-interval = 0.01
-xx, yy = np.meshgrid(np.arange(A_min, A_max, step=interval),
-                         np.arange(AB_min, AB_max, step=interval))
-samples = np.c_[xx.ravel(), yy.ravel()]
-Z = []
-for A, minus_AB in samples:
-    H_bak = H.copy()
-    graph_iterate(H_bak, 8, A, -minus_AB, False, False)
-    Z.append(np.all([np.argmax(H_bak.node[idx]['attr']) for idx in H.nodes()]))
-cmap_backgrounds = ListedColormap(['#FFAAAA', '#AAAAFF'])
-Z = np.array(Z)
-Z = Z.reshape(xx.shape)
-plt.pcolormesh(xx, yy, Z, cmap=cmap_backgrounds)
+#==============================================================================
+# A_min, A_max = 1, 5
+# AB_min, AB_max = 0, 5
+# interval = 0.01
+# xx, yy = np.meshgrid(np.arange(A_min, A_max, step=interval),
+#                          np.arange(AB_min, AB_max, step=interval))
+# samples = np.c_[xx.ravel(), yy.ravel()]
+# Z = []
+# for A, minus_AB in samples:
+#     H_bak = H.copy()
+#     graph_iterate(H_bak, 8, A, -minus_AB, False, False)
+#     Z.append(np.all([np.argmax(H_bak.node[idx]['attr']) for idx in H.nodes()]))
+# cmap_backgrounds = ListedColormap(['#FFAAAA', '#AAAAFF'])
+# Z = np.array(Z)
+# Z = Z.reshape(xx.shape)
+# plt.pcolormesh(xx, yy, Z, cmap=cmap_backgrounds)
+#==============================================================================
 #dists = np.array([x.dot(M).dot(x[np.newaxis].T) for x in samples])
 #dists = dists.reshape(xx.shape)
 #Z = np.abs(dists - distance) < 1e-1
