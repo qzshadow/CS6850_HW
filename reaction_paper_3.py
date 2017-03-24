@@ -12,6 +12,7 @@ author: zq32 @ Cornell
 
 import networkx as nx
 from matplotlib import pyplot as plt
+from matplotlib.colors import ListedColormap
 from collections import Counter
 import numpy as np
 from numpy.random import choice
@@ -49,7 +50,7 @@ original iterate function
 A can be changed by a lot of B
 
 """
-def graph_naive_iterate(G, steps, plot=False, debug=False):
+def graph_naive_iterate(G, steps, A, B, AB, plot=False, debug=False):
     for t in range(steps):
         if plot:
             h = int(np.sqrt(steps))
@@ -97,7 +98,7 @@ def graph_naive_iterate(G, steps, plot=False, debug=False):
                 G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
     plt.show()
                 
-def graph_iterate(G, steps, plot=False, debug=False):
+def graph_iterate(G, steps, A, B, AB, plot=False, debug=False):
 #    prob_A = []
 #    node_A = []
     for t in range(steps):
@@ -139,8 +140,8 @@ def graph_iterate(G, steps, plot=False, debug=False):
                 G.node[idx]['temp'][2] += neibor_attr[2] * max(A, B)
             G.node[idx]['temp'][2] += AB
         
-        print('0 :', G.node[0])
-        print('2 :', G.node[2])
+#        print('0 :', G.node[0])
+#        print('2 :', G.node[2])
 #        print('1 :', G.node[1])
 #        print('3 :', G.node[3])
 #        print('4 :', G.node[4])
@@ -159,13 +160,10 @@ def graph_iterate(G, steps, plot=False, debug=False):
             #if (res[0]<G.node[idx]['attr'][0]):
             #    continue
             G.node[idx]['attr'] += node_attr
-
+            G.node[idx]['attr'] = np.array([i if i >= 0 else 0 for i in G.node[idx]['attr']])
             G.node[idx]['attr'] = G.node[idx]['attr']/sum(G.node[idx]['attr'])
-            
             G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
             
-            
-                
     # statistics
     plt.show()
             
@@ -230,25 +228,37 @@ for i in H.nodes():
     if i not in a_init_nodes_idx:
         H.node[i]['attr'] = np.array([0,1,0], dtype='f')
         
-A = 1.2
-B = 1
-AB = -1
-Delta = 1.
+#A = 1.2
+#B = 1
+#AB = -1
+#Delta = 1.
+#
+#H2 = H.copy()
+#steps = 8
+#graph_naive_iterate(H2, steps, A, B, AB, True, False)
+#graph_iterate(H, steps, A, B, AB, True, False)
 
-H2 = H.copy()
-steps = 8
-graph_naive_iterate(H2, steps, True, False)
-graph_iterate(H, steps, True, False)
 
-
-
-#==============================================================================
-# 
-# A = 1.4
-# B = 1
-# AB = -1
-# Delta = 1.
-#==============================================================================
+A_min, A_max = 1, 5
+AB_min, AB_max = 0, 5
+interval = 0.01
+xx, yy = np.meshgrid(np.arange(A_min, A_max, step=interval),
+                         np.arange(AB_min, AB_max, step=interval))
+samples = np.c_[xx.ravel(), yy.ravel()]
+Z = []
+for A, minus_AB in samples:
+    H_bak = H.copy()
+    graph_iterate(H_bak, 8, A, -minus_AB, False, False)
+    Z.append(np.all([np.argmax(H_bak.node[idx]['attr']) for idx in H.nodes()]))
+cmap_backgrounds = ListedColormap(['#FFAAAA', '#AAAAFF'])
+Z = np.array(Z)
+Z = Z.reshape(xx.shape)
+plt.pcolormesh(xx, yy, Z, cmap=cmap_backgrounds)
+#dists = np.array([x.dot(M).dot(x[np.newaxis].T) for x in samples])
+#dists = dists.reshape(xx.shape)
+#Z = np.abs(dists - distance) < 1e-1
+#plt.figure()
+#plt.pcolormesh(xx, yy, Z, cmap=cmap_backgrounds)
     
 
 
