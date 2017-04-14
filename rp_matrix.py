@@ -8,34 +8,47 @@ from math import ceil
 
 def matrix_graph_iterate(G: nx.Graph, steps, A, B, AB, plot=False, debug=False):
     matrix_res = []
+    pure_mat_res = []
     Trans_Matrix = np.array([
         [A, 0, A],
         [0, B, B],
         [A, B, max(A, B)]
     ], dtype='f')
+    adj_mat = nx.to_numpy_matrix(G, nodelist=G.nodes())  # n*n
+    color_mat = np.array(list(nx.get_node_attributes(G, 'attr').values()))  # n*3
+    # pure_mat_res.append(color_mat)
     for t in range(steps):
-        matrix_res.append([])
-        if plot:
-            pass
+        color_mat = np.linalg.multi_dot([adj_mat, color_mat, Trans_Matrix]) + np.array([0, 0, AB])
+        pure_mat_res.append(color_mat)
 
-        # phase 1 matrix algorithm
-        for idx in G.nodes():
-            node = G.node[idx]
-            node_attr = node['attr']
-            node_color_idx = np.argmax(node_attr)
-            sum_neigh_attr = np.array([0,0,0], dtype='f')
-            for neibor_idx in G.neighbors(idx):
-                sum_neigh_attr += G.node[neibor_idx]['attr'] # type: np.array
+    # neigh_attr_sum_mat = np.dot(adj_mat, color_mat)  # n*3 line i represents the sum of node i's neibor's attr
+    # update = np.dot(neigh_attr_sum_mat, Trans_Matrix) + np.array([0, 0, AB])
+    # print(update)
+    # for t in range(steps):
+    #     matrix_res.append([])
+    #     if plot:
+    #         pass
+    #
+    #     # phase 1 matrix algorithm
+    #
+    #
+    #     for idx in G.nodes():
+    #         node = G.node[idx]
+    #         node_attr = node['attr']
+    #         node_color_idx = np.argmax(node_attr)
+    #         sum_neigh_attr = np.array([0,0,0], dtype='f')
+    #         for neibor_idx in G.neighbors(idx):
+    #             sum_neigh_attr += G.node[neibor_idx]['attr'] # type: np.array
+    #
+    #         G.node[idx]['temp'] = np.dot(sum_neigh_attr, Trans_Matrix) + np.array([0, 0, AB])
+    #         matrix_res[t].append(G.node[idx]['temp'].copy())
+    #
+    #     # phase 2
+    #     for idx in G.nodes():
+    #         G.node[idx]['attr'] = G.node[idx]['temp'].copy()
+    #         G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
 
-            G.node[idx]['temp'] = np.dot(sum_neigh_attr, Trans_Matrix) + np.array([0, 0, AB])
-            matrix_res[t].append(G.node[idx]['temp'].copy())
-
-        # phase 2
-        for idx in G.nodes():
-            G.node[idx]['attr'] = G.node[idx]['temp'].copy()
-            G.node[idx]['temp'] = np.array([0,0,0], dtype='f')
-
-    return matrix_res
+    return pure_mat_res
 
 def naive_graph_iterate(G: nx.Graph, steps, A, B, AB, plot=False, debug=False):
     naive_res = []
@@ -70,14 +83,14 @@ def naive_graph_iterate(G: nx.Graph, steps, A, B, AB, plot=False, debug=False):
 
     return naive_res
 
-
+# def xdot(*args): return reduce(np.dot, args)
 def main():
     A = 2
     B = 1
     AB = -.5
     Delta = 10.
 
-    num_nodes = 12
+    num_nodes = 6
     sparse = 0.2
     steps = 12
 
@@ -109,8 +122,9 @@ def main():
 
     pos = nx.spring_layout(G)
     G2 = G.copy()
-    matrix_met = np.array(matrix_graph_iterate(G,2, A, B, AB))
-    naive_met = np.array(naive_graph_iterate(G2, 2, A, B, AB))
+    pure_mat_res, matrix_met = np.array(matrix_graph_iterate(G,2, A, B, AB, True))
+    naive_met = np.array(naive_graph_iterate(G2, 2, A, B, AB, True))
+    print(pure_mat_res)
     print(matrix_met)
     print(naive_met)
     # print(np.array_equal(matrix_met, naive_met))

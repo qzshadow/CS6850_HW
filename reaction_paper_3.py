@@ -140,14 +140,6 @@ def graph_iterate(G, steps, A, B, AB, plot=False, debug=False):
                 G.node[idx]['temp'][2] += neibor_attr[2] * max(A, B)
             G.node[idx]['temp'][2] += AB
         
-#        print('0 :', G.node[0])
-#        print('2 :', G.node[2])
-#        print('1 :', G.node[1])
-#        print('3 :', G.node[3])
-#        print('4 :', G.node[4])
-#        print('7 :', G.node[7])
-#        print('10 :', G.node[10])        
-#        print('2 :', G.node[2])
                 
         
     # phase 2 
