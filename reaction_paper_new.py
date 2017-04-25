@@ -17,6 +17,7 @@ from collections import Counter
 import numpy as np
 from numpy.random import choice
 from math import ceil
+import operator
 
 """
 return the node color in a list
@@ -46,14 +47,21 @@ def get_node_color(G, attr):
     return color_res
 
 
-def graph_iterate(G, steps, A, B, plot=False, debug=False):
-
+def graph_iterate(G, heri_nodes, pos, steps, A, B, plot=False, debug=False):
     for t in range(steps):
         if plot:
+            
             h = int(np.sqrt(steps))
             plt.subplot(h,ceil(steps / h),t + 1)
             n_size = 200 if debug else 30
-            nx.draw_networkx_nodes(G, pos, node_color=get_node_color(G, 'attr'), node_size=n_size)
+            non_heri_nodes = list(filter(lambda x:x not in degree_heri_nodes,G.nodes()))
+            nodeColorNonHeri = map(lambda x:get_node_color(G,'attr')[x],non_heri_nodes) 
+            nodeColorHeri = map(lambda x:get_node_color(G,'attr')[x],heri_nodes)
+            nx.draw_networkx_nodes(G, pos, nodelist = non_heri_nodes, 
+                                   node_shape = 'o',
+                                   node_color=list(nodeColorNonHeri), node_size=n_size)
+            nx.draw_networkx_nodes(G, pos, nodelist = heri_nodes, node_color=list(nodeColorHeri), 
+                                   node_shape = '^', node_size = n_size)
             if debug:
                 nx.draw_networkx_labels(G, pos)
             nx.draw_networkx_edges(G, pos, width = 0.5, alpha=0.8)
@@ -163,34 +171,34 @@ def graph_iterate(G, steps, A, B, plot=False, debug=False):
 #==============================================================================
 
 
-H = nx.Graph()
-H.add_edges_from([(0,1), (1,2), (0,2), (2,3), (3,4),(3,5),(4,5)])
-pos = nx.spring_layout(H)
-nx.draw_networkx(H, pos)
-for idx in H.nodes():
-    H.node[idx]['attr'] = np.array([0, 0], dtype='f')
-    H.node[idx]['temp'] = np.array([0, 0], dtype='f')   
-    H.node[idx]['is_cont'] = True
-    
-a_init_nodes_idx = [0]
-for i in a_init_nodes_idx:
-    H.node[i]['attr'] = np.array([1,0], dtype='f')
-for i in H.nodes():
-    if i not in a_init_nodes_idx:
-        H.node[i]['attr'] = np.array([0,1], dtype='f')
-        
-discrete_node_idx = [3]
-for i in H.nodes():
-    if i in discrete_node_idx:
-        H.node[i]['is_cont'] = False
-        
-        
-A = 1.5
-B = 1
-
-H2 = H.copy()
-steps = 29
-graph_iterate(H, steps, A, B, True, False)
+#H = nx.Graph()
+#H.add_edges_from([(0,1), (1,2), (0,2), (2,3), (3,4),(3,5),(4,5)])
+#pos = nx.spring_layout(H)
+#nx.draw_networkx(H, pos)
+#for idx in H.nodes():
+#    H.node[idx]['attr'] = np.array([0, 0], dtype='f')
+#    H.node[idx]['temp'] = np.array([0, 0], dtype='f')   
+#    H.node[idx]['is_cont'] = True
+#    
+#a_init_nodes_idx = [0]
+#for i in a_init_nodes_idx:
+#    H.node[i]['attr'] = np.array([1,0], dtype='f')
+#for i in H.nodes():
+#    if i not in a_init_nodes_idx:
+#        H.node[i]['attr'] = np.array([0,1], dtype='f')
+#        
+#discrete_node_idx = [3]
+#for i in H.nodes():
+#    if i in discrete_node_idx:
+#        H.node[i]['is_cont'] = False
+#        
+#        
+#A = 1.5
+#B = 1
+#
+#H2 = H.copy()
+#steps = 29
+#graph_iterate(H, steps, A, B, True, False)
 
 
 #==============================================================================
@@ -216,20 +224,67 @@ graph_iterate(H, steps, A, B, True, False)
 #plt.figure()
 #plt.pcolormesh(xx, yy, Z, cmap=cmap_backgrounds)
 
-p = 0.03
-edge_list = []
-G = nx.gnp_random_graph(10, 0.5)
-H = nx.gnp_random_graph(15, 0.7)
-edge_prob = np.random.rand(len(G.node), len(H.node))
-for i, node_i in enumerate(G.nodes()):
-    for j, node_j in enumerate(H.nodes()):
-        if edge_prob[i,j] < p:
-            edge_list.append((node_i, node_j+len(G.nodes())))
+def generate_two_block(n1, p1, n2, p2, inter_prob):
+    
+    edge_list = []
+    G = nx.gnp_random_graph(n1, p1)
+    H = nx.gnp_random_graph(n2 ,p2)
+    edge_prob = np.random.rand(len(G.node), len(H.node))
+    for i, node_i in enumerate(G.nodes()):
+        for j, node_j in enumerate(H.nodes()):
+            if edge_prob[i,j] < inter_prob:
+                edge_list.append((node_i, node_j+len(G.nodes())))
+                
+    J = nx.disjoint_union(G, H) # type: nx.Graph
+    J.add_edges_from(edge_list)
+    
+    return J
+
+def turn_nodes_to_discrete(G, nodes):
+    for idx in nodes:
+        G.node[idx]['is_cont'] = False
+        
+def init_graph(J, a_init_nodes_idx):
+    for idx in J.nodes():
+        if idx in a_init_nodes_idx:
+            J.node[idx]['attr'] = np.array([1, 0], dtype='f')
+            J.node[idx]['temp'] = np.array([0, 0], dtype='f')   
+            J.node[idx]['is_cont'] = True
+        else:
+            J.node[idx]['attr'] = np.array([0, 1], dtype='f')
+            J.node[idx]['temp'] = np.array([0, 0], dtype='f')   
+            J.node[idx]['is_cont'] = True
             
-J = nx.disjoint_union(G, H) # type: nx.Graph
-J.add_edges_from(edge_list)
-nx.draw_networkx(J)
+def degree_heristic(J, defender_k, centrality_type):
+    return list(map(lambda x : x[0], sorted(centrality_type(J).items(), 
+                    key = operator.itemgetter(1), reverse=True)[:defender_k]))
+        
+def closeness_heristic(J, defender_k):
+    pass
+#    return 
+n1 = 10
+p1 = 0.5
+n2 = 15
+p2 = 0.7
+inter_prob = 0.05
+a_init_nodes_idx = [0]
+A = 2
+B = 1
+steps = 20
+defender_k = 5
 
-#print(sum(sum(np.random.rand(len(G.node), len(H.node)) < p)))
 
+J = generate_two_block(n1, p1, n2, p2, inter_prob)
+while(not nx.is_connected(J)):
+    J = generate_two_block(n1, p1, n2, p2, inter_prob)
 
+pos = nx.spring_layout(J)
+
+init_graph(J, a_init_nodes_idx)
+
+for centrality_type in [nx.degree_centrality, nx.closeness_centrality, nx.betweenness_centrality, nx.eigenvector_centrality]:
+    J_local = J.copy()
+    degree_heri_nodes = degree_heristic(J_local, defender_k, centrality_type)
+#    print(degree_heri_nodes)
+    turn_nodes_to_discrete(J_local, degree_heri_nodes)
+    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, True, False)
