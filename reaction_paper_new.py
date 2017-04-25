@@ -71,26 +71,48 @@ def graph_iterate(G, steps, A, B, plot=False, debug=False):
         for idx in G.nodes():
             node = G.node[idx]
             node_attr = node['attr']
-            node_color_idx = np.argmax(node_attr)
-            for neibor_idx in G.neighbors(idx):
-                neibor_node = G.node[neibor_idx]
-                neibor_attr = neibor_node['attr']
-
-                G.node[idx]['temp'][0] += neibor_attr[0] * A
-
-                G.node[idx]['temp'][1] += neibor_attr[1] * B
+            node_is_cont = node['is_cont']
+            if node_is_cont == True:
+#                node_color_idx = np.argmax(node_attr)
+                for neibor_idx in G.neighbors(idx):
+                    neibor_node = G.node[neibor_idx]
+                    neibor_attr = neibor_node['attr']
+    
+                    G.node[idx]['temp'][0] += neibor_attr[0] * A
+    
+                    G.node[idx]['temp'][1] += neibor_attr[1] * B
+            elif node_is_cont == False:
+                red_cont = 0
+                blue_cont = 0
+                for neibor_idx in G.neighbors(idx):
+                    if np.argmax(G.node[neibor_idx]['attr'])  == 0:
+                        red_cont += 1
+                    else:
+                        blue_cont += 1
+                    if (red_cont * A >= blue_cont * B):
+                        G.node[idx]['temp'] = np.array([1,0], dtype='f')
+                    else:
+                        G.node[idx]['temp'] = np.array([0,1], dtype='f')
+                        
+                    
+                    
+            else:
+                raise ValueError('unknown is_cont')
 
         
                 
         
     # phase 2 
         for idx in G.nodes():
-            node = G.node[idx]
-            node_attr = node['temp']
-
-            G.node[idx]['attr'] += node_attr
-            G.node[idx]['attr'] = G.node[idx]['attr']/sum(G.node[idx]['attr'])
-            G.node[idx]['temp'] = np.array([0,0], dtype='f')
+            if G.node[idx]['is_cont'] == True:
+                node = G.node[idx]
+                node_temp = node['temp']
+    
+                G.node[idx]['attr'] += node_temp
+                G.node[idx]['attr'] = G.node[idx]['attr']/sum(G.node[idx]['attr'])
+                G.node[idx]['temp'] = np.array([0,0], dtype='f')
+            elif G.node[idx]['is_cont'] == False:
+                G.node[idx]['attr'] = G.node[idx]['temp'].copy()
             
     # statistics
     plt.show()
@@ -147,7 +169,8 @@ pos = nx.spring_layout(H)
 nx.draw_networkx(H, pos)
 for idx in H.nodes():
     H.node[idx]['attr'] = np.array([0, 0], dtype='f')
-    H.node[idx]['temp'] = np.array([0, 0], dtype='f')    
+    H.node[idx]['temp'] = np.array([0, 0], dtype='f')   
+    H.node[idx]['is_cont'] = True
     
 a_init_nodes_idx = [0]
 for i in a_init_nodes_idx:
@@ -156,14 +179,17 @@ for i in H.nodes():
     if i not in a_init_nodes_idx:
         H.node[i]['attr'] = np.array([0,1], dtype='f')
         
+discrete_node_idx = [3]
+for i in H.nodes():
+    if i in discrete_node_idx:
+        H.node[i]['is_cont'] = False
+        
+        
 A = 1.5
 B = 1
-#AB = -1
-#Delta = 1.
 
 H2 = H.copy()
-steps = 20
-#graph_naive_iterate(H2, steps, A, B, AB, True, False)
+steps = 29
 graph_iterate(H, steps, A, B, True, False)
 
 
@@ -189,7 +215,21 @@ graph_iterate(H, steps, A, B, True, False)
 #Z = np.abs(dists - distance) < 1e-1
 #plt.figure()
 #plt.pcolormesh(xx, yy, Z, cmap=cmap_backgrounds)
-    
 
+p = 0.03
+edge_list = []
+G = nx.gnp_random_graph(10, 0.5)
+H = nx.gnp_random_graph(15, 0.7)
+edge_prob = np.random.rand(len(G.node), len(H.node))
+for i, node_i in enumerate(G.nodes()):
+    for j, node_j in enumerate(H.nodes()):
+        if edge_prob[i,j] < p:
+            edge_list.append((node_i, node_j+len(G.nodes())))
+            
+J = nx.disjoint_union(G, H) # type: nx.Graph
+J.add_edges_from(edge_list)
+nx.draw_networkx(J)
+
+#print(sum(sum(np.random.rand(len(G.node), len(H.node)) < p)))
 
 
