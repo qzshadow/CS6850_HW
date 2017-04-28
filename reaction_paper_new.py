@@ -46,10 +46,19 @@ def get_node_color(G, attr):
                 raise ValueError('error processing color')
     return color_res
 
+def get_node_transparency(G, attr):
+    node_attr = nx.get_node_attributes(G, attr) # type: map
+    trans_res = []
+    for attr_val in node_attr.values():
+        red = hex(int(255-attr_val[0] * 255.0))[2:]
+        redresult = ('0'*(2-len(red)))+red
+        trans_res.append('#' + (redresult *3))
+    return trans_res
+
 
 def graph_iterate(G, heri_nodes, pos, steps, A, B, plot=False, debug=False):
     for t in range(steps):
-        if plot:
+        if plot == 'color':
             
             h = int(np.sqrt(steps))
             plt.subplot(h,ceil(steps / h),t + 1)
@@ -62,6 +71,26 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot=False, debug=False):
                                    node_color=list(nodeColorNonHeri), node_size=n_size)
             nx.draw_networkx_nodes(G, pos, nodelist = heri_nodes, node_color=list(nodeColorHeri), 
                                    node_shape = '^', node_size = n_size)
+            if debug:
+                nx.draw_networkx_labels(G, pos)
+            nx.draw_networkx_edges(G, pos, width = 0.5, alpha=0.8)
+            plt.axis('off')
+            if debug:
+                plt.show()
+                
+        elif plot == 'alpha':
+            h = int(np.sqrt(steps))
+            plt.subplot(h,ceil(steps / h),t + 1)
+            n_size = 200 if debug else 30
+            non_heri_nodes = list(filter(lambda x:x not in degree_heri_nodes,G.nodes()))
+            nodeColorNonHeri = map(lambda x:get_node_transparency(G,'attr')[x],non_heri_nodes) 
+            nodeColorHeri = map(lambda x:get_node_transparency(G,'attr')[x],heri_nodes)
+            nx.draw_networkx_nodes(G, pos, nodelist = non_heri_nodes, 
+                                   node_shape = 'o',
+                                   node_color=list(nodeColorNonHeri), node_size=n_size)
+            nx.draw_networkx_nodes(G, pos, nodelist = heri_nodes, node_color=list(nodeColorHeri), 
+                                   node_shape = '^', node_size = n_size)
+            
             if debug:
                 nx.draw_networkx_labels(G, pos)
             nx.draw_networkx_edges(G, pos, width = 0.5, alpha=0.8)
@@ -270,7 +299,7 @@ inter_prob = 0.05
 a_init_nodes_idx = [0]
 A = 2
 B = 1
-steps = 20
+steps = 49
 defender_k = 5
 
 
@@ -284,7 +313,9 @@ init_graph(J, a_init_nodes_idx)
 
 for centrality_type in [nx.degree_centrality, nx.closeness_centrality, nx.betweenness_centrality, nx.eigenvector_centrality]:
     J_local = J.copy()
-    degree_heri_nodes = degree_heristic(J_local, defender_k, centrality_type)
+#    degree_heri_nodes = degree_heristic(J_local, defender_k, centrality_type)
+    degree_heri_nodes = []
 #    print(degree_heri_nodes)
     turn_nodes_to_discrete(J_local, degree_heri_nodes)
-    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, True, False)
+    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
+    break
