@@ -53,9 +53,10 @@ def get_node_transparency(G, attr):
     node_attr = nx.get_node_attributes(G, attr)  # type: map
     trans_res = []
     for attr_val in node_attr.values():
-        red = hex(int(255 - attr_val[0] * 255.0))[2:]
-        redresult = ('0' * (2 - len(red))) + red
-        trans_res.append('#' + (redresult * 3))
+        # red = hex(int(255 - attr_val[0] * 255.0))[2:]
+        # redresult = ('0' * (2 - len(red))) + red
+        # trans_res.append('#' + (redresult * 3))
+        trans_res.append(attr_val[0])
     return trans_res
 
 
@@ -90,8 +91,10 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
             nodeColorHeri = map(lambda x: get_node_transparency(G, 'attr')[x], heri_nodes)
             nx.draw_networkx_nodes(G, pos, nodelist=non_heri_nodes,
                                    node_shape='o',
+                                   cmap=plt.cm.Greys,
                                    node_color=list(nodeColorNonHeri), node_size=n_size)
             nx.draw_networkx_nodes(G, pos, nodelist=heri_nodes, node_color=list(nodeColorHeri),
+                                   cmap=plt.cm.Greys,
                                    node_shape='^', node_size=n_size)
 
             if debug:
