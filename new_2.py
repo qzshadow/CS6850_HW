@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Mar 23 17:27:42 2017
-reaction paper code for CS6850
-network version and probability version for bilingal cascade
-assumpt that the innovation product cannot be replaced by old ones 
-assumpt that only a small number of nodes are new product and the others are all old products
-add probability
-author: zq32 @ Cornell
+mid term slides code for CS6850
+probability version for bilingual cascade in networks
+compared it to naive counterpart
+
+
+assume that the innovation product cannot be replaced by old ones 
+assume that only a small number of nodes are new product and the others are all old products
+author: zq32@cornell.edu tl486@cornell.edu
 """
 
 import networkx as nx
