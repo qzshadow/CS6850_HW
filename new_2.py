@@ -65,7 +65,7 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
 
             h = int(np.sqrt(steps))
             plt.subplot(h, ceil(steps / h), t + 1)
-            n_size = 200 if debug else 30
+            n_size = 200 if debug else 50
             non_heri_nodes = list(filter(lambda x: x not in heri_nodes, G.nodes()))
             nodeColorNonHeri = map(lambda x: get_node_color(G, 'attr')[x], non_heri_nodes)
             nodeColorHeri = map(lambda x: get_node_color(G, 'attr')[x], heri_nodes)
@@ -90,7 +90,17 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
             nodeColorHeri = map(lambda x: get_node_transparency(G, 'attr')[x], heri_nodes)
             nx.draw_networkx_nodes(G, pos, nodelist=non_heri_nodes,
                                    node_shape='o',
+                                   node_color='black',
+                                   node_size=n_size,
+                                   linewidths=1.5)
+            nx.draw_networkx_nodes(G, pos, nodelist=non_heri_nodes,
+                                   node_shape='o',
                                    node_color=list(nodeColorNonHeri), node_size=n_size)
+            nx.draw_networkx_nodes(G, pos, nodelist=heri_nodes,
+                                   node_shape='^',
+                                   node_color='black',
+                                   node_size=n_size,
+                                   linewidths=1.5)
             nx.draw_networkx_nodes(G, pos, nodelist=heri_nodes, node_color=list(nodeColorHeri),
                                    node_shape='^', node_size=n_size)
 
