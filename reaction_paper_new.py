@@ -66,7 +66,7 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
             h = int(np.sqrt(steps))
             plt.subplot(h, ceil(steps / h), t + 1)
             n_size = 200 if debug else 30
-            non_heri_nodes = list(filter(lambda x: x not in degree_heri_nodes, G.nodes()))
+            non_heri_nodes = list(filter(lambda x: x not in heri_nodes, G.nodes()))
             nodeColorNonHeri = map(lambda x: get_node_color(G, 'attr')[x], non_heri_nodes)
             nodeColorHeri = map(lambda x: get_node_color(G, 'attr')[x], heri_nodes)
             nx.draw_networkx_nodes(G, pos, nodelist=non_heri_nodes,
@@ -85,7 +85,7 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
             h = int(np.sqrt(steps))
             plt.subplot(h, ceil(steps / h), t + 1)
             n_size = 200 if debug else 30
-            non_heri_nodes = list(filter(lambda x: x not in degree_heri_nodes, G.nodes()))
+            non_heri_nodes = list(filter(lambda x: x not in heri_nodes, G.nodes()))
             nodeColorNonHeri = map(lambda x: get_node_transparency(G, 'attr')[x], non_heri_nodes)
             nodeColorHeri = map(lambda x: get_node_transparency(G, 'attr')[x], heri_nodes)
             nx.draw_networkx_nodes(G, pos, nodelist=non_heri_nodes,
@@ -157,105 +157,6 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
     # statistics
     plt.show()
 
-
-# initialize process
-# ==============================================================================
-# A = 2
-# B = 1
-# AB = -.5
-# Delta = 10.
-# 
-# num_nodes = 12
-# sparse = 0.2
-# steps = 12
-# 
-# is_debug = False
-# is_plot = True
-# if is_debug:
-#     G = nx.read_gpickle('graph.pk')
-# else:
-#     while(True):
-#         G = nx.gnp_random_graph(num_nodes, sparse)
-#         if nx.is_connected(G):
-#             break
-#     for node_idx in G.nodes():
-#         G.node[node_idx]['attr'] = np.array([0,0,0], dtype='f')
-#         G.node[node_idx]['temp'] = np.array([0,0,0], dtype='f')
-#     #nx.set_node_attributes(G, "t", 0)
-#     # initialize infections
-#     a_init = ceil(0.1 * num_nodes)
-#     
-#     random_nodes = choice(num_nodes, a_init, replace=False)
-#     a_init_nodes_idx = random_nodes[:a_init]
-#     
-#     for i in a_init_nodes_idx:
-#         G.node[i]['attr'] = np.array([1,0,0],dtype='f')
-#     for i in G.nodes():
-#         if i not in a_init_nodes_idx:
-#             G.node[i]['attr'] = np.array([0,1,0], dtype='f')
-#         
-#     nx.write_gpickle(G, 'graph.pk')
-# 
-# pos = nx.spring_layout(G)
-# G2 = G.copy()
-# graph_naive_iterate(G, steps, is_plot, is_debug)
-# graph_iterate(G2, steps, is_plot, is_debug)
-# ==============================================================================
-
-
-# H = nx.Graph()
-# H.add_edges_from([(0,1), (1,2), (0,2), (2,3), (3,4),(3,5),(4,5)])
-# pos = nx.spring_layout(H)
-# nx.draw_networkx(H, pos)
-# for idx in H.nodes():
-#    H.node[idx]['attr'] = np.array([0, 0], dtype='f')
-#    H.node[idx]['temp'] = np.array([0, 0], dtype='f')   
-#    H.node[idx]['is_cont'] = True
-#    
-# a_init_nodes_idx = [0]
-# for i in a_init_nodes_idx:
-#    H.node[i]['attr'] = np.array([1,0], dtype='f')
-# for i in H.nodes():
-#    if i not in a_init_nodes_idx:
-#        H.node[i]['attr'] = np.array([0,1], dtype='f')
-#        
-# discrete_node_idx = [3]
-# for i in H.nodes():
-#    if i in discrete_node_idx:
-#        H.node[i]['is_cont'] = False
-#        
-#        
-# A = 1.5
-# B = 1
-#
-# H2 = H.copy()
-# steps = 29
-# graph_iterate(H, steps, A, B, True, False)
-
-
-# ==============================================================================
-# A_min, A_max = 1, 5
-# AB_min, AB_max = 0, 5
-# interval = 0.01
-# xx, yy = np.meshgrid(np.arange(A_min, A_max, step=interval),
-#                          np.arange(AB_min, AB_max, step=interval))
-# samples = np.c_[xx.ravel(), yy.ravel()]
-# Z = []
-# for A, minus_AB in samples:
-#     H_bak = H.copy()
-#     graph_iterate(H_bak, 8, A, -minus_AB, False, False)
-#     Z.append(np.all([np.argmax(H_bak.node[idx]['attr']) for idx in H.nodes()]))
-# cmap_backgrounds = ListedColormap(['#FFAAAA', '#AAAAFF'])
-# Z = np.array(Z)
-# Z = Z.reshape(xx.shape)
-# plt.pcolormesh(xx, yy, Z, cmap=cmap_backgrounds)
-# ==============================================================================
-# dists = np.array([x.dot(M).dot(x[np.newaxis].T) for x in samples])
-# dists = dists.reshape(xx.shape)
-# Z = np.abs(dists - distance) < 1e-1
-# plt.figure()
-# plt.pcolormesh(xx, yy, Z, cmap=cmap_backgrounds)
-
 def generate_two_block(n1, p1, n2, p2, inter_prob):
     edge_list = []
     G = nx.gnp_random_graph(n1, p1)
@@ -297,33 +198,51 @@ def degree_heristic(J, defender_k, centrality_type):
 def closeness_heristic(J, defender_k):
     pass
 
-
-#    return
-n1 = 10
-p1 = 0.5
-n2 = 15
-p2 = 0.7
-inter_prob = 0.05
+H = nx.Graph()
+H.add_edges_from([(0,1), (1,2), (0,2), (2,3), (3,4),(3,5),(4,5)])
+pos = nx.spring_layout(H)
 a_init_nodes_idx = [0]
+init_graph(H, a_init_nodes_idx)
+steps = 9
 A = 2
 B = 1
-steps = 49
-defender_k = 5
+graph_iterate(G=H,
+              heri_nodes=[],
+              pos=pos,
+              steps=steps,
+              A=A,
+              B=B,
+              plot='alpha',
+              debug=False)
 
-J = generate_two_block(n1, p1, n2, p2, inter_prob)
-while (not nx.is_connected(J)):
-    J = generate_two_block(n1, p1, n2, p2, inter_prob)
 
-pos = nx.spring_layout(J)
 
-init_graph(J, a_init_nodes_idx)
-
-for centrality_type in [nx.degree_centrality, nx.closeness_centrality, nx.betweenness_centrality,
-                        nx.eigenvector_centrality]:
-    J_local = J.copy()
-    #    degree_heri_nodes = degree_heristic(J_local, defender_k, centrality_type)
-    degree_heri_nodes = []
-    #    print(degree_heri_nodes)
-    turn_nodes_to_discrete(J_local, degree_heri_nodes)
-    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
-    break
+#    return
+# n1 = 10
+# p1 = 0.5
+# n2 = 15
+# p2 = 0.7
+# inter_prob = 0.05
+# a_init_nodes_idx = [0]
+# A = 2
+# B = 1
+# steps = 49
+# defender_k = 5
+#
+# J = generate_two_block(n1, p1, n2, p2, inter_prob)
+# while (not nx.is_connected(J)):
+#     J = generate_two_block(n1, p1, n2, p2, inter_prob)
+#
+# pos = nx.spring_layout(J)
+#
+# init_graph(J, a_init_nodes_idx)
+#
+# for centrality_type in [nx.degree_centrality, nx.closeness_centrality, nx.betweenness_centrality,
+#                         nx.eigenvector_centrality]:
+#     J_local = J.copy()
+#     #    degree_heri_nodes = degree_heristic(J_local, defender_k, centrality_type)
+#     degree_heri_nodes = []
+#     #    print(degree_heri_nodes)
+#     turn_nodes_to_discrete(J_local, degree_heri_nodes)
+#     graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
+#     break
