@@ -34,18 +34,11 @@ def get_node_color(G, attr):
     node_attr = nx.get_node_attributes(G, attr)
     color_res = []
     for attr_val in node_attr.values():
-        if sum(attr_val) == 0:
-            color_res.append('grey')
+        max_idx = np.argmax(attr_val)
+        if max_idx == 0:
+            color_res.append('black')
         else:
-            max_idx = np.argmax(attr_val)
-            if max_idx == 0:
-                color_res.append('r')
-            elif max_idx == 1:
-                color_res.append('b')
-            elif max_idx == 2:
-                color_res.append('g')
-            else:
-                raise ValueError('error processing color')
+            color_res.append('white')
     return color_res
 
 
@@ -57,6 +50,52 @@ def get_node_transparency(G, attr):
         redresult = ('0' * (2 - len(red))) + red
         trans_res.append('#' + (redresult * 3))
     return trans_res
+
+
+def graph_naive_iterate(G, pos, steps, A, B, plot=True, debug=False):
+    for t in range(steps):
+        if plot == True:
+            h = int(np.sqrt(steps))
+            plt.subplot(h, ceil(steps / h), t + 1)
+            n_size = 200 if debug else 30
+            nx.draw_networkx_nodes(G, pos, node_color='black', node_size=n_size, linewidths=1.5)
+            nx.draw_networkx_nodes(G, pos, node_color=get_node_color(G, 'attr'), node_size=n_size)
+            if debug:
+                nx.draw_networkx_labels(G, pos)
+            nx.draw_networkx_edges(G, pos, width=0.5, alpha=0.8)
+            plt.axis('off')
+        # plt.show()
+
+        # phase 1 for every node update it's temp according to it's neibor's attr
+        for idx in G.nodes():
+            node = G.node[idx]
+            node_attr = node['attr']
+            node_color_idx = np.argmax(node_attr)
+            for neibor_idx in G.neighbors(idx):
+                neibor_node = G.node[neibor_idx]
+                neibor_attr = neibor_node['attr']
+                neibor_color_idx = np.argmax(neibor_attr)
+                if neibor_color_idx == 0:
+                    G.node[idx]['temp'][0] += A
+                elif neibor_color_idx == 1:
+                    G.node[idx]['temp'][1] += B
+                elif neibor_color_idx == 2:
+                    G.node[idx]['temp'][0] += A
+                    G.node[idx]['temp'][1] += B
+
+
+            # phase 2 for every node update it's attr according to its temp
+        for idx in G.nodes():
+            node = G.node[idx]
+            node_attr = node['temp']
+            if G.node[idx]['attr'][0] == 1:
+                G.node[idx]['temp'] = np.array([0, 0, 0], dtype='f')
+            else:
+                res = np.array([0, 0, 0], dtype='f')
+                res[np.argmax(node_attr)] = 1
+                G.node[idx]['attr'] = res
+                G.node[idx]['temp'] = np.array([0, 0, 0], dtype='f')
+    plt.show()
 
 
 def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
@@ -127,9 +166,7 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
                 for neibor_idx in G.neighbors(idx):
                     neibor_node = G.node[neibor_idx]
                     neibor_attr = neibor_node['attr']
-
                     G.node[idx]['temp'][0] += neibor_attr[0] * A
-
                     G.node[idx]['temp'][1] += neibor_attr[1] * B
             elif node_is_cont == False:
                 red_cont = 0
@@ -211,13 +248,23 @@ def closeness_heristic(J, defender_k):
 
 
 H = nx.Graph()
-H.add_edges_from([(0, 1), (1, 2), (0, 2), (2, 3), (3, 4), (3, 5), (4, 5)])
+H.add_edges_from([(0, 1), (1, 2), (0, 2), (2, 3), (3, 4), (3, 5), (4, 5), (3, 6), (4, 6)])
 pos = nx.spring_layout(H)
 a_init_nodes_idx = [0]
 init_graph(H, a_init_nodes_idx)
+J = H.copy()
+G = H.copy()
 steps = 9
 A = 2
 B = 1
+graph_naive_iterate(G=G,
+                    pos=pos,
+                    steps=steps,
+                    A=A,
+                    B=B,
+                    plot=True,
+                    debug=False)
+
 graph_iterate(G=H,
               heri_nodes=[],
               pos=pos,
@@ -227,6 +274,15 @@ graph_iterate(G=H,
               plot='alpha',
               debug=False)
 
+turn_nodes_to_discrete(J, [3])
+graph_iterate(G=J,
+              heri_nodes=[3],
+              pos=pos,
+              steps=steps,
+              A=A,
+              B=B,
+              plot='alpha',
+              debug=False)
 
 
 #    return
