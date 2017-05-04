@@ -334,7 +334,7 @@ inter_prob = 0.001
 a_init_nodes_idx = [0]
 A = 2
 B = 1
-steps = 1
+steps = 20
 defender_k = 5
 
 J = generate_two_block(n1, p1, n2, p2, inter_prob)
@@ -345,18 +345,15 @@ pos = nx.spring_layout(J)
 
 init_graph(J, a_init_nodes_idx)
 
-print(helper_debug(J))
-
-for centrality_type in [nx.degree_centrality, nx.closeness_centrality, nx.betweenness_centrality
-                        ]:
                         #,nx.eigenvector_centrality]:
-    J_local = J.copy()
-    degree_heri_nodes = heuristic_nodes_gen(J_local,n1,defender_k,n1+n2)#degree_heristic(J_local, defender_k, centrality_type)
+J_local = J.copy()
+degree_heri_nodes = heuristic_nodes_gen(J_local,n1,defender_k,n1+n2)
+turn_nodes_to_discrete(J_local, degree_heri_nodes)
+graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
+summarize_graph(J_local, degree_heri_nodes)
 
-    # degree_heri_nodes = []
-    print(degree_heri_nodes)
-    turn_nodes_to_discrete(J_local, degree_heri_nodes)
-    print("type: " + str(centrality_type))
-    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
-    break
-
+J_local2 = J.copy()
+degree_heri_nodes = degree_heristic(J_local2, defender_k, nx.betweenness_centrality)
+turn_nodes_to_discrete(J_local2, degree_heri_nodes)
+graph_iterate(J_local2, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
+summarize_graph(J_local2, degree_heri_nodes)
