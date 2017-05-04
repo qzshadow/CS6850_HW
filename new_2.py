@@ -149,7 +149,7 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
 
         nx.draw_networkx_edges(G, pos, width=0.5, alpha=0.8)
         plt.axis('off')
-        plt.show()
+        # plt.show()
 
         # if plot != 'text' and debug:
         #     nx.draw_networkx_labels(G, pos)
@@ -208,7 +208,7 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
     #     plt.savefig('defender.png')
     # else:
     #     plt.savefig('continuous.png')
-    # plt.show()
+    plt.show()
 
 
 def generate_two_block(n1, p1, n2, p2, inter_prob):
