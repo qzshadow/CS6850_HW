@@ -57,7 +57,8 @@ def get_node_transparency(G, attr):
 def graph_naive_iterate(G, pos, steps, A, B, plot=True, debug=False):
     for t in range(steps):
         if plot == True:
-            h = int(np.sqrt(steps))
+            # h = int(np.sqrt(steps))
+            h = 1
             plt.subplot(h, ceil(steps / h), t + 1)
             n_size = 200 if debug else 30
             nx.draw_networkx_nodes(G, pos, node_color='black', node_size=n_size, linewidths=1.5)
@@ -86,7 +87,7 @@ def graph_naive_iterate(G, pos, steps, A, B, plot=True, debug=False):
                     G.node[idx]['temp'][1] += B
 
 
-            # phase 2 for every node update it's attr according to its temp
+                    # phase 2 for every node update it's attr according to its temp
         for idx in G.nodes():
             node = G.node[idx]
             node_attr = node['temp']
@@ -97,16 +98,17 @@ def graph_naive_iterate(G, pos, steps, A, B, plot=True, debug=False):
                 res[np.argmax(node_attr)] = 1
                 G.node[idx]['attr'] = res
                 G.node[idx]['temp'] = np.array([0, 0, 0], dtype='f')
+    plt.savefig('naive.png')
     plt.show()
 
 
 def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
     for t in range(steps):
         if plot == 'color':
-
-            h = int(np.sqrt(steps))
+            h = 1
+            # h = int(np.sqrt(steps))
             plt.subplot(h, ceil(steps / h), t + 1)
-            n_size = 200 if debug else 50
+            n_size = 200 if debug else 30
             non_heri_nodes = list(filter(lambda x: x not in heri_nodes, G.nodes()))
             nodeColorNonHeri = map(lambda x: get_node_color(G, 'attr')[x], non_heri_nodes)
             nodeColorHeri = map(lambda x: get_node_color(G, 'attr')[x], heri_nodes)
@@ -123,7 +125,8 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
                 plt.show()
 
         elif plot == 'alpha':
-            h = int(np.sqrt(steps))
+            # h = int(np.sqrt(steps))
+            h = 1
             plt.subplot(h, ceil(steps / h), t + 1)
             n_size = 200 if debug else 30
             non_heri_nodes = list(filter(lambda x: x not in heri_nodes, G.nodes()))
@@ -183,13 +186,8 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
                     else:
                         G.node[idx]['temp'] = np.array([0, 1], dtype='f')
 
-
-
             else:
                 raise ValueError('unknown is_cont')
-
-
-
 
                 # phase 2
         for idx in G.nodes():
@@ -204,6 +202,10 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
                 G.node[idx]['attr'] = G.node[idx]['temp'].copy()
 
     # statistics
+    if heri_nodes:
+        plt.savefig('defender.png')
+    else:
+        plt.savefig('continuous.png')
     plt.show()
 
 
@@ -250,8 +252,9 @@ def closeness_heristic(J, defender_k):
 
 
 H = nx.Graph()
-H.add_edges_from([(0, 1), (1, 2), (0, 2), (2, 3), (3, 4), (3, 5), (4, 5), (3, 6), (4, 6)])
-pos = nx.spring_layout(H)
+H.add_edges_from([(0, 1), (1, 2), (0, 2), (2, 3), (3, 4), (3, 5), (4, 5), (3, 6), (5, 6)])
+fix_pos = {0: (0, 0), 1: (0, 2), 2: (1, 1), 3: (2, 1), 4: (3, 2), 5: (3, 1), 6: (3, 0)}
+pos = nx.spring_layout(H, pos=fix_pos)
 a_init_nodes_idx = [0]
 init_graph(H, a_init_nodes_idx)
 J = H.copy()
