@@ -261,21 +261,30 @@ def summarize_graph(G, heri_node):
 
 def heuristic_nodes_gen_(G, start_idx, defender_k):
     adj_matrix = nx.adj_matrix(G).todense()
+    link_matrix = adj_matrix[start_idx:][:, 0: start_idx]
+    print(link_matrix.shape)
 
 
-def heuristic_nodes_gen(G, start_idx, k):
-    adj_matrix = nx.adjacency_matrix(G).todense()
-    #print(adj_matrix.shape)
-    N,_ = adj_matrix.shape
-    interEdgeCount = np.zeros((N))
-    for i in range(start_idx):
-        for j in range(start_idx,N):
-            interEdgeCount[j] += adj_matrix[i,j]
+def heuristic_nodes_gen(G, start_idx, k, N):
+    interEdgeCount = np.zeros((N), dtype='int')
+    for node_from, node_to in G.edges():
+        if node_from < 50 and node_to >= 50:
+            interEdgeCount[node_to]+=1
+        elif node_from >= 50 and node_to < 50:
+            interEdgeCount[node_from]+=1
     #print(interEdgeCount)
     subInterEdgeCount = interEdgeCount[start_idx:]
-    output = subInterEdgeCount.argsort()[-k:][::-1] +50
-    print(np.sum(adj_matrix[output,0:50]))
+    output = subInterEdgeCount.argsort()[-k:][::-1] + start_idx
     return list(output)
+
+def helper_debug(G):
+    output = []
+    for node_from, node_to in G.edges():
+        if node_from < 50 and node_to >= 50:
+            output.append(node_to)
+        elif node_from >= 50 and node_to < 50:
+            output.append(node_from)
+    return set(output)
 
 # ==============================================================================
 # H = nx.Graph()
@@ -286,9 +295,10 @@ def heuristic_nodes_gen(G, start_idx, k):
 # init_graph(H, a_init_nodes_idx)
 # J = H.copy()
 # G = H.copy()
-# steps = 9
+# steps = 1
 # A = 2
 # B = 1
+
 # graph_naive_iterate(G=G,
 #                     pos=pos,
 #                     steps=steps,
@@ -335,14 +345,18 @@ pos = nx.spring_layout(J)
 
 init_graph(J, a_init_nodes_idx)
 
+print(helper_debug(J))
+
 for centrality_type in [nx.degree_centrality, nx.closeness_centrality, nx.betweenness_centrality
                         ]:
                         #,nx.eigenvector_centrality]:
     J_local = J.copy()
-    degree_heri_nodes = heuristic_nodes_gen(J_local,n1,defender_k)#degree_heristic(J_local, defender_k, centrality_type)
+    degree_heri_nodes = heuristic_nodes_gen(J_local,n1,defender_k,n1+n2)#degree_heristic(J_local, defender_k, centrality_type)
 
     # degree_heri_nodes = []
-    #    print(degree_heri_nodes)
+    print(degree_heri_nodes)
     turn_nodes_to_discrete(J_local, degree_heri_nodes)
     print("type: " + str(centrality_type))
     graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
+    break
+
