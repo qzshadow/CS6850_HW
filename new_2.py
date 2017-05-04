@@ -208,7 +208,12 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
     #     plt.savefig('defender.png')
     # else:
     #     plt.savefig('continuous.png')
-    plt.show()
+    if plot in ['color', 'alpha', 'text']:
+        plt.show()
+
+
+
+
 
 
 def generate_two_block(n1, p1, n2, p2, inter_prob):
@@ -259,11 +264,6 @@ def summarize_graph(G, heri_node):
 
     return num_newtech, sum_newtech
 
-def heuristic_nodes_gen_(G, start_idx, defender_k):
-    adj_matrix = nx.adj_matrix(G).todense()
-    link_matrix = adj_matrix[start_idx:][:, 0: start_idx]
-    print(link_matrix.shape)
-
 
 def heuristic_nodes_gen(G, start_idx, k, N):
     interEdgeCount = np.zeros((N), dtype='int')
@@ -272,7 +272,6 @@ def heuristic_nodes_gen(G, start_idx, k, N):
             interEdgeCount[node_to]+=1
         elif node_from >= 50 and node_to < 50:
             interEdgeCount[node_from]+=1
-    #print(interEdgeCount)
     subInterEdgeCount = interEdgeCount[start_idx:]
     output = subInterEdgeCount.argsort()[-k:][::-1] + start_idx
     return list(output)
@@ -327,36 +326,58 @@ def helper_debug(G):
 #               debug=False)
 # ==============================================================================
 
-n1 = 50
-p1 = p2 = 0.5
-n2 = 50
-inter_prob = 0.001
-a_init_nodes_idx = [0]
-A = 2
-B = 1
-steps = 1
-defender_k = 5
+def evaluate_para(p_inner,p_inter,n_experiment):
+    n1 = 50
+    p1 = p2 = p_inner
+    n2 = 50
+    inter_prob = p_inter
+    a_init_nodes_idx = [0]
+    A = 2
+    B = 1
+    steps = 1
+    defender_k = 5
+    sum_method1,sum_method2 = 0.,0.
+    for exp_i in range(n_experiment):
+        J = generate_two_block(n1, p1, n2, p2, inter_prob)
+        while (not nx.is_connected(J)):
+            J = generate_two_block(n1, p1, n2, p2, inter_prob)
 
-J = generate_two_block(n1, p1, n2, p2, inter_prob)
-while (not nx.is_connected(J)):
-    J = generate_two_block(n1, p1, n2, p2, inter_prob)
+        pos = nx.spring_layout(J)
 
-pos = nx.spring_layout(J)
+        init_graph(J, a_init_nodes_idx)
 
-init_graph(J, a_init_nodes_idx)
+        # for centrality_type in [nx.degree_centrality, nx.betweenness_centrality]:
+                            #,nx.eigenvector_centrality]:
+        J_local = J.copy()
+        heri_nodes = heuristic_nodes_gen(J_local,n1,defender_k,n1+n2)
+        turn_nodes_to_discrete(J_local, heri_nodes)
+        graph_iterate(J_local, heri_nodes, pos, steps, A, B, 'alpha', False)
+        s1=summarize_graph(J_local, heri_nodes)
 
-print(helper_debug(J))
+        J_local2 = J.copy()
+        heri_nodes_2 = degree_heristic(J_local2, defender_k, nx.betweenness_centrality)
+        turn_nodes_to_discrete(J_local2, heri_nodes_2)
+        graph_iterate(J_local2, heri_nodes_2, pos, steps, A, B, 'alpha', False)
+        s2=summarize_graph(J_local2, heri_nodes_2)
+        sum_method1 += s1[0]
+        sum_method2 += s2[0]
+    return sum_method1/n_experiment , sum_method2/n_experiment
 
-for centrality_type in [nx.degree_centrality, nx.closeness_centrality, nx.betweenness_centrality
-                        ]:
-                        #,nx.eigenvector_centrality]:
-    J_local = J.copy()
-    degree_heri_nodes = heuristic_nodes_gen(J_local,n1,defender_k,n1+n2)#degree_heristic(J_local, defender_k, centrality_type)
+M_1 = []
+M_2 = []
+for p_inter in np.logspace(0.001,0.001,num=1):
+    localList1 = []
+    localList2 = []
+    for p_inner in np.arange(0.2,0.3,0.2):
+        scores = evaluate_para(p_inner,p_inter,n_experiment=1)
+        localList1.append(scores[0])
+        localList2.append(scores[1])
+    M_1.append(localList1)
+    M_2.append(localList2)
 
-    # degree_heri_nodes = []
-    print(degree_heri_nodes)
-    turn_nodes_to_discrete(J_local, degree_heri_nodes)
-    print("type: " + str(centrality_type))
-    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
-    break
+print(M_1)
+print(M_2)
+
+
+
 
