@@ -105,8 +105,8 @@ def graph_naive_iterate(G, pos, steps, A, B, plot=True, debug=False):
 def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
     for t in range(steps):
         if plot == 'color':
-            h = 1
-            # h = int(np.sqrt(steps))
+            #            h = 1
+            h = int(np.sqrt(steps))
             plt.subplot(h, ceil(steps / h), t + 1)
             n_size = 200 if debug else 30
             non_heri_nodes = list(filter(lambda x: x not in heri_nodes, G.nodes()))
@@ -117,16 +117,10 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
                                    node_color=list(nodeColorNonHeri), node_size=n_size)
             nx.draw_networkx_nodes(G, pos, nodelist=heri_nodes, node_color=list(nodeColorHeri),
                                    node_shape='^', node_size=n_size)
-            if debug:
-                nx.draw_networkx_labels(G, pos)
-            nx.draw_networkx_edges(G, pos, width=0.5, alpha=0.8)
-            plt.axis('off')
-            if debug:
-                plt.show()
 
         elif plot == 'alpha':
-            # h = int(np.sqrt(steps))
-            h = 1
+            h = int(np.sqrt(steps))
+            #            h = 1
             plt.subplot(h, ceil(steps / h), t + 1)
             n_size = 200 if debug else 30
             non_heri_nodes = list(filter(lambda x: x not in heri_nodes, G.nodes()))
@@ -148,12 +142,20 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
             nx.draw_networkx_nodes(G, pos, nodelist=heri_nodes, node_color=list(nodeColorHeri),
                                    node_shape='^', node_size=n_size)
 
-            if debug:
-                nx.draw_networkx_labels(G, pos)
-            nx.draw_networkx_edges(G, pos, width=0.5, alpha=0.8)
-            plt.axis('off')
-            if debug:
-                plt.show()
+        elif plot == 'text':
+            num_newtech, sum_newtech = summarize_graph(G, heri_nodes)
+            print("step: " + repr(t) + "red_num: " + repr(num_newtech))
+            # print("sum_newtech" + repr(sum_newtech))
+
+        nx.draw_networkx_edges(G, pos, width=0.5, alpha=0.8)
+        plt.axis('off')
+        plt.show()
+
+        # if plot != 'text' and debug:
+        #     nx.draw_networkx_labels(G, pos)
+        #
+        # if plot != 'text' and debug:
+        #     plt.show()
 
         for idx in G.nodes():
             G.node[idx]['attr'] = G.node[idx]['attr'].astype(np.float32, copy=False)
@@ -202,11 +204,11 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
                 G.node[idx]['attr'] = G.node[idx]['temp'].copy()
 
     # statistics
-    if heri_nodes:
-        plt.savefig('defender.png')
-    else:
-        plt.savefig('continuous.png')
-    plt.show()
+    # if heri_nodes:
+    #     plt.savefig('defender.png')
+    # else:
+    #     plt.savefig('continuous.png')
+    # plt.show()
 
 
 def generate_two_block(n1, p1, n2, p2, inter_prob):
@@ -247,75 +249,124 @@ def degree_heristic(J, defender_k, centrality_type):
                                            key=operator.itemgetter(1), reverse=True)[:defender_k]))
 
 
-def closeness_heristic(J, defender_k):
-    pass
+def summarize_graph(G, heri_node):
+    num_newtech = 0
+    sum_newtech = 0
+    for idx in G.nodes():
+        if G.node[idx]['attr'][0] > G.node[idx]['attr'][1]:
+            num_newtech += 1
+        sum_newtech += G.node[idx]['attr'][0]
 
+    return num_newtech, sum_newtech
 
-H = nx.Graph()
-H.add_edges_from([(0, 1), (1, 2), (0, 2), (2, 3), (3, 4), (3, 5), (4, 5), (3, 6), (5, 6)])
-fix_pos = {0: (0, 0), 1: (0, 2), 2: (1, 1), 3: (2, 1), 4: (3, 2), 5: (3, 1), 6: (3, 0)}
-pos = nx.spring_layout(H, pos=fix_pos)
-a_init_nodes_idx = [0]
-init_graph(H, a_init_nodes_idx)
-J = H.copy()
-G = H.copy()
-steps = 9
-A = 2
-B = 1
-graph_naive_iterate(G=G,
-                    pos=pos,
-                    steps=steps,
-                    A=A,
-                    B=B,
-                    plot=True,
-                    debug=False)
+def heuristic_nodes_gen(G, start_idx, k):
+    adj_matrix = nx.adjacency_matrix(G)
+    #print(adj_matrix.shape)
+    N,_ = adj_matrix.shape
+    interEdgeCount = np.zeros((N))
+    for i in range(start_idx):
+        for j in range(start_idx,N):
+            interEdgeCount[j] += adj_matrix[i,j]
+    #print(interEdgeCount)
+    subInterEdgeCount = interEdgeCount[start_idx:]
+    output = subInterEdgeCount.argsort()[-k:][::-1] +50
+    print(np.sum(adj_matrix[output,0:50]))
+    return output
 
-graph_iterate(G=H,
-              heri_nodes=[],
-              pos=pos,
-              steps=steps,
-              A=A,
-              B=B,
-              plot='alpha',
-              debug=False)
-
-turn_nodes_to_discrete(J, [3])
-graph_iterate(G=J,
-              heri_nodes=[3],
-              pos=pos,
-              steps=steps,
-              A=A,
-              B=B,
-              plot='alpha',
-              debug=False)
-
-
-#    return
-# n1 = 10
-# p1 = 0.5
-# n2 = 15
-# p2 = 0.7
-# inter_prob = 0.05
+# ==============================================================================
+# H = nx.Graph()
+# H.add_edges_from([(0, 1), (1, 2), (0, 2), (2, 3), (3, 4), (3, 5), (4, 5), (3, 6), (5, 6)])
+# fix_pos = {0: (0, 0), 1: (0, 2), 2: (1, 1), 3: (2, 1), 4: (3, 2), 5: (3, 1), 6: (3, 0)}
+# pos = nx.spring_layout(H, pos=fix_pos)
 # a_init_nodes_idx = [0]
+# init_graph(H, a_init_nodes_idx)
+# J = H.copy()
+# G = H.copy()
+# steps = 9
 # A = 2
 # B = 1
-# steps = 49
-# defender_k = 5
-#
-# J = generate_two_block(n1, p1, n2, p2, inter_prob)
-# while (not nx.is_connected(J)):
-#     J = generate_two_block(n1, p1, n2, p2, inter_prob)
-#
-# pos = nx.spring_layout(J)
-#
-# init_graph(J, a_init_nodes_idx)
-#
-# for centrality_type in [nx.degree_centrality, nx.closeness_centrality, nx.betweenness_centrality,
-#                         nx.eigenvector_centrality]:
-#     J_local = J.copy()
-#     #    degree_heri_nodes = degree_heristic(J_local, defender_k, centrality_type)
-#     degree_heri_nodes = []
-#     #    print(degree_heri_nodes)
-#     turn_nodes_to_discrete(J_local, degree_heri_nodes)
-#     graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
-#     break
+# graph_naive_iterate(G=G,
+#                     pos=pos,
+#                     steps=steps,
+#                     A=A,
+#                     B=B,
+#                     plot=True,
+#                     debug=False)
+# 
+# graph_iterate(G=H,
+#               heri_nodes=[],
+#               pos=pos,
+#               steps=steps,
+#               A=A,
+#               B=B,
+#               plot='alpha',
+#               debug=False)
+# 
+# turn_nodes_to_discrete(J, [3])
+# graph_iterate(G=J,
+#               heri_nodes=[3],
+#               pos=pos,
+#               steps=steps,
+#               A=A,
+#               B=B,
+#               plot='alpha',
+#               debug=False)
+# ==============================================================================
+
+n1 = 50
+p1 = p2 = 0.5
+n2 = 50
+inter_prob = 0.001
+a_init_nodes_idx = [0]
+A = 2
+B = 1
+steps = 16
+defender_k = 5
+
+J = generate_two_block(n1, p1, n2, p2, inter_prob)
+while (not nx.is_connected(J)):
+    J = generate_two_block(n1, p1, n2, p2, inter_prob)
+
+pos = nx.spring_layout(J)
+
+init_graph(J, a_init_nodes_idx)
+
+for centrality_type in [nx.degree_centrality, nx.closeness_centrality, nx.betweenness_centrality
+                        ]:
+                        #,nx.eigenvector_centrality]:
+    J_local = J.copy()
+    degree_heri_nodes = degree_heristic(J_local, defender_k, centrality_type)#heuristic_nodes_gen(J_local,n1,defender_k)
+    # degree_heri_nodes = []
+    #    print(degree_heri_nodes)
+    turn_nodes_to_discrete(J_local, degree_heri_nodes)
+    print("type: " + str(centrality_type))
+    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
+
+
+
+    # graph_naive_iterate(G=G,
+    #                     pos=pos,
+    #                     steps=steps,
+    #                     A=A,
+    #                     B=B,
+    #                     plot=True,
+    #                     debug=False)
+    #
+    # graph_iterate(G=H,
+    #               heri_nodes=[],
+    #               pos=pos,
+    #               steps=steps,
+    #               A=A,
+    #               B=B,
+    #               plot='alpha',
+    #               debug=False)
+    #
+    # turn_nodes_to_discrete(J, [3])
+    # graph_iterate(G=J,
+    #               heri_nodes=[3],
+    #               pos=pos,
+    #               steps=steps,
+    #               A=A,
+    #               B=B,
+    #               plot='alpha',
+    #               debug=False)
