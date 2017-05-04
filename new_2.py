@@ -117,6 +117,8 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
                                    node_color=list(nodeColorNonHeri), node_size=n_size)
             nx.draw_networkx_nodes(G, pos, nodelist=heri_nodes, node_color=list(nodeColorHeri),
                                    node_shape='^', node_size=n_size)
+            nx.draw_networkx_edges(G, pos, width=0.5, alpha=0.8)
+            plt.axis('off')
 
         elif plot == 'alpha':
             h = int(np.sqrt(steps))
@@ -141,15 +143,13 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
                                    linewidths=1.5)
             nx.draw_networkx_nodes(G, pos, nodelist=heri_nodes, node_color=list(nodeColorHeri),
                                    node_shape='^', node_size=n_size)
+            nx.draw_networkx_edges(G, pos, width=0.5, alpha=0.8)
+            plt.axis('off')
 
         elif plot == 'text':
             num_newtech, sum_newtech = summarize_graph(G, heri_nodes)
             print("step: " + repr(t) + "red_num: " + repr(num_newtech))
-            # print("sum_newtech" + repr(sum_newtech))
 
-        nx.draw_networkx_edges(G, pos, width=0.5, alpha=0.8)
-        plt.axis('off')
-        # plt.show()
 
         # if plot != 'text' and debug:
         #     nx.draw_networkx_labels(G, pos)
@@ -327,33 +327,51 @@ def helper_debug(G):
 #               debug=False)
 # ==============================================================================
 
-n1 = 50
-p1 = p2 = 0.5
-n2 = 50
-inter_prob = 0.001
-a_init_nodes_idx = [0]
-A = 2
-B = 1
-steps = 20
-defender_k = 5
+def evaluate_para(p_inner, p_inter):
+    n1 = 50
+    p1 = p2 = 0.5
+    n2 = 50
+    inter_prob = 0.001
+    a_init_nodes_idx = [0]
+    A = 2
+    B = 1
+    steps = 20
+    defender_k = 5
 
-J = generate_two_block(n1, p1, n2, p2, inter_prob)
-while (not nx.is_connected(J)):
     J = generate_two_block(n1, p1, n2, p2, inter_prob)
+    while (not nx.is_connected(J)):
+        J = generate_two_block(n1, p1, n2, p2, inter_prob)
 
-pos = nx.spring_layout(J)
+    pos = nx.spring_layout(J)
 
-init_graph(J, a_init_nodes_idx)
+    init_graph(J, a_init_nodes_idx)
 
-                        #,nx.eigenvector_centrality]:
-J_local = J.copy()
-degree_heri_nodes = heuristic_nodes_gen(J_local,n1,defender_k,n1+n2)
-turn_nodes_to_discrete(J_local, degree_heri_nodes)
-graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
-summarize_graph(J_local, degree_heri_nodes)
+    J_local = J.copy()
+    degree_heri_nodes = heuristic_nodes_gen(J_local,n1,defender_k,n1+n2)
+    turn_nodes_to_discrete(J_local, degree_heri_nodes)
+    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'beta', False)
+    num_newtech, sum_newtech = summarize_graph(J_local, degree_heri_nodes)
 
-J_local2 = J.copy()
-degree_heri_nodes = degree_heristic(J_local2, defender_k, nx.betweenness_centrality)
-turn_nodes_to_discrete(J_local2, degree_heri_nodes)
-graph_iterate(J_local2, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
-summarize_graph(J_local2, degree_heri_nodes)
+    J_local2 = J.copy()
+    degree_heri_nodes2 = degree_heristic(J_local2, defender_k, nx.degree_centrality)
+    turn_nodes_to_discrete(J_local2, degree_heri_nodes2)
+    graph_iterate(J_local2, degree_heri_nodes2, pos, steps, A, B, 'beta', False)
+    num_newtech2, sum_newtech2 = summarize_graph(J_local2, degree_heri_nodes2)
+
+    return num_newtech, num_newtech2
+
+def main():
+    p_inner_list = np.linspace(0.2,0.8,num=4)
+    p_inter_list = np.logspace(0.001, 0.2, num=5)
+    num_experiments = np.arange(3)
+    res1 = np.empty(shape=(len(num_experiments), len(p_inner_list), len(p_inter_list)))
+    res2 = np.empty(shape=(len(num_experiments), len(p_inner_list), len(p_inter_list)))
+    for i, p_inner in enumerate(p_inner_list):
+        for j, p_inter in enumerate(p_inter_list):
+            for k, exper_idx in enumerate(num_experiments):
+                res1[k, i,j], res2[k, i,j] = evaluate_para(p_inner, p_inter)
+
+    print(np.mean(res1, axis=0) - np.mean(res2, axis=0))
+
+if __name__ == '__main__':
+    main()
