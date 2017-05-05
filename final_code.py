@@ -109,13 +109,13 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
             h = int(np.sqrt(steps))
             plt.subplot(h, ceil(steps / h), t + 1)
             n_size = 200 if debug else 30
-            non_heri_nodes = list(filter(lambda x: x not in heri_nodes, G.nodes()))
-            nodeColorNonHeri = map(lambda x: get_node_color(G, 'attr')[x], non_heri_nodes)
-            nodeColorHeri = map(lambda x: get_node_color(G, 'attr')[x], heri_nodes)
-            nx.draw_networkx_nodes(G, pos, nodelist=non_heri_nodes,
+            non_heuri_nodes = list(filter(lambda x: x not in heri_nodes, G.nodes()))
+            non_heuri_nodes_color = map(lambda x: get_node_color(G, 'attr')[x], non_heuri_nodes)
+            heuri_nodes_color = map(lambda x: get_node_color(G, 'attr')[x], heri_nodes)
+            nx.draw_networkx_nodes(G, pos, nodelist=non_heuri_nodes,
                                    node_shape='o',
-                                   node_color=list(nodeColorNonHeri), node_size=n_size)
-            nx.draw_networkx_nodes(G, pos, nodelist=heri_nodes, node_color=list(nodeColorHeri),
+                                   node_color=list(non_heuri_nodes_color), node_size=n_size)
+            nx.draw_networkx_nodes(G, pos, nodelist=heri_nodes, node_color=list(heuri_nodes_color),
                                    node_shape='^', node_size=n_size)
             nx.draw_networkx_edges(G, pos, width=0.5, alpha=0.8)
             plt.axis('off')
@@ -125,23 +125,23 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
             #            h = 1
             plt.subplot(h, ceil(steps / h), t + 1)
             n_size = 200 if debug else 30
-            non_heri_nodes = list(filter(lambda x: x not in heri_nodes, G.nodes()))
-            nodeColorNonHeri = map(lambda x: get_node_transparency(G, 'attr')[x], non_heri_nodes)
-            nodeColorHeri = map(lambda x: get_node_transparency(G, 'attr')[x], heri_nodes)
-            nx.draw_networkx_nodes(G, pos, nodelist=non_heri_nodes,
+            non_heuri_nodes = list(filter(lambda x: x not in heri_nodes, G.nodes()))
+            non_heuri_nodes_color = map(lambda x: get_node_transparency(G, 'attr')[x], non_heuri_nodes)
+            heuri_nodes_color = map(lambda x: get_node_transparency(G, 'attr')[x], heri_nodes)
+            nx.draw_networkx_nodes(G, pos, nodelist=non_heuri_nodes,
                                    node_shape='o',
                                    node_color='black',
                                    node_size=n_size,
                                    linewidths=1.5)
-            nx.draw_networkx_nodes(G, pos, nodelist=non_heri_nodes,
+            nx.draw_networkx_nodes(G, pos, nodelist=non_heuri_nodes,
                                    node_shape='o',
-                                   node_color=list(nodeColorNonHeri), node_size=n_size)
+                                   node_color=list(non_heuri_nodes_color), node_size=n_size)
             nx.draw_networkx_nodes(G, pos, nodelist=heri_nodes,
                                    node_shape='^',
                                    node_color='black',
                                    node_size=n_size,
                                    linewidths=1.5)
-            nx.draw_networkx_nodes(G, pos, nodelist=heri_nodes, node_color=list(nodeColorHeri),
+            nx.draw_networkx_nodes(G, pos, nodelist=heri_nodes, node_color=list(heuri_nodes_color),
                                    node_shape='^', node_size=n_size)
             nx.draw_networkx_edges(G, pos, width=0.5, alpha=0.8)
             plt.axis('off')
@@ -150,32 +150,26 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
             num_newtech, sum_newtech = summarize_graph(G, heri_nodes)
             print("step: " + repr(t) + "red_num: " + repr(num_newtech))
 
-
-        # if plot != 'text' and debug:
-        #     nx.draw_networkx_labels(G, pos)
-        #
-        # if plot != 'text' and debug:
-        #     plt.show()
+        if debug:
+            nx.draw_networkx_labels(G, pos)
+            plt.show()
 
         for idx in G.nodes():
             G.node[idx]['attr'] = G.node[idx]['attr'].astype(np.float32, copy=False)
             G.node[idx]['temp'] = G.node[idx]['temp'].astype(np.float32, copy=False)
 
-
             # phase 1
 
         for idx in G.nodes():
             node = G.node[idx]
-            node_attr = node['attr']
             node_is_cont = node['is_cont']
-            if node_is_cont == True:
-                #                node_color_idx = np.argmax(node_attr)
+            if node_is_cont is True:
                 for neibor_idx in G.neighbors(idx):
                     neibor_node = G.node[neibor_idx]
                     neibor_attr = neibor_node['attr']
                     G.node[idx]['temp'][0] += neibor_attr[0] * A
                     G.node[idx]['temp'][1] += neibor_attr[1] * B
-            elif node_is_cont == False:
+            elif node_is_cont is False:
                 red_cont = 0
                 blue_cont = 0
                 for neibor_idx in G.neighbors(idx):
@@ -183,24 +177,23 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
                         red_cont += 1
                     else:
                         blue_cont += 1
-                    if (red_cont * A >= blue_cont * B):
+                    if red_cont * A >= blue_cont * B:
                         G.node[idx]['temp'] = np.array([1, 0], dtype='f')
                     else:
                         G.node[idx]['temp'] = np.array([0, 1], dtype='f')
-
             else:
                 raise ValueError('unknown is_cont')
 
                 # phase 2
         for idx in G.nodes():
-            if G.node[idx]['is_cont'] == True:
+            if G.node[idx]['is_cont'] is True:
                 node = G.node[idx]
                 node_temp = node['temp']
 
                 G.node[idx]['attr'] += node_temp
                 G.node[idx]['attr'] = G.node[idx]['attr'] / sum(G.node[idx]['attr'])
                 G.node[idx]['temp'] = np.array([0, 0], dtype='f')
-            elif G.node[idx]['is_cont'] == False:
+            elif G.node[idx]['is_cont'] is False:
                 G.node[idx]['attr'] = G.node[idx]['temp'].copy()
 
     # statistics
@@ -208,7 +201,8 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
     #     plt.savefig('defender.png')
     # else:
     #     plt.savefig('continuous.png')
-    plt.show()
+    if not debug:
+        plt.show()
 
 
 def generate_two_block(n1, p1, n2, p2, inter_prob):
@@ -259,6 +253,7 @@ def summarize_graph(G, heri_node):
 
     return num_newtech, sum_newtech
 
+
 def heuristic_nodes_gen_(G, start_idx, defender_k):
     adj_matrix = nx.adj_matrix(G).todense()
     link_matrix = adj_matrix[start_idx:][:, 0: start_idx]
@@ -268,23 +263,25 @@ def heuristic_nodes_gen_(G, start_idx, defender_k):
 def heuristic_nodes_gen(G, start_idx, k, N):
     interEdgeCount = np.zeros((N), dtype='int')
     for node_from, node_to in G.edges():
-        if node_from < 50 and node_to >= 50:
-            interEdgeCount[node_to]+=1
-        elif node_from >= 50 and node_to < 50:
-            interEdgeCount[node_from]+=1
-    #print(interEdgeCount)
+        if node_from < 50 <= node_to:
+            interEdgeCount[node_to] += 1
+        elif node_from >= 50 > node_to:
+            interEdgeCount[node_from] += 1
+    # print(interEdgeCount)
     subInterEdgeCount = interEdgeCount[start_idx:]
     output = subInterEdgeCount.argsort()[-k:][::-1] + start_idx
     return list(output)
 
+
 def helper_debug(G):
     output = []
     for node_from, node_to in G.edges():
-        if node_from < 50 and node_to >= 50:
+        if node_from < 50 <= node_to:
             output.append(node_to)
-        elif node_from >= 50 and node_to < 50:
+        elif node_from >= 50 > node_to:
             output.append(node_from)
     return set(output)
+
 
 # ==============================================================================
 # H = nx.Graph()
@@ -329,9 +326,9 @@ def helper_debug(G):
 
 def evaluate_para(p_inner, p_inter):
     n1 = 50
-    p1 = p2 = 0.5
+    p1 = p2 = p_inner
     n2 = 50
-    inter_prob = 0.001
+    inter_prob = p_inter
     a_init_nodes_idx = [0]
     A = 2
     B = 1
@@ -339,7 +336,7 @@ def evaluate_para(p_inner, p_inter):
     defender_k = 5
 
     J = generate_two_block(n1, p1, n2, p2, inter_prob)
-    while (not nx.is_connected(J)):
+    while not nx.is_connected(J):
         J = generate_two_block(n1, p1, n2, p2, inter_prob)
 
     pos = nx.spring_layout(J)
@@ -347,31 +344,33 @@ def evaluate_para(p_inner, p_inter):
     init_graph(J, a_init_nodes_idx)
 
     J_local = J.copy()
-    degree_heri_nodes = heuristic_nodes_gen(J_local,n1,defender_k,n1+n2)
+    degree_heri_nodes = heuristic_nodes_gen(J_local, n1, defender_k, n1 + n2)
     turn_nodes_to_discrete(J_local, degree_heri_nodes)
-    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'beta', False)
+    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
     num_newtech, sum_newtech = summarize_graph(J_local, degree_heri_nodes)
 
     J_local2 = J.copy()
-    degree_heri_nodes2 = degree_heristic(J_local2, defender_k, nx.degree_centrality)
+    degree_heri_nodes2 = degree_heristic(J_local2, defender_k, nx.betweenness_centrality)
     turn_nodes_to_discrete(J_local2, degree_heri_nodes2)
-    graph_iterate(J_local2, degree_heri_nodes2, pos, steps, A, B, 'beta', False)
+    graph_iterate(J_local2, degree_heri_nodes2, pos, steps, A, B, 'alpha', False)
     num_newtech2, sum_newtech2 = summarize_graph(J_local2, degree_heri_nodes2)
 
     return num_newtech, num_newtech2
 
+
 def main():
-    p_inner_list = np.linspace(0.2,0.8,num=4)
-    p_inter_list = np.logspace(0.001, 0.2, num=5)
+    p_inner_list = np.linspace(0.2, 0.8, num=4)
+    p_inter_list = np.logspace(-3, -1, num=3)
     num_experiments = np.arange(3)
     res1 = np.empty(shape=(len(num_experiments), len(p_inner_list), len(p_inter_list)))
     res2 = np.empty(shape=(len(num_experiments), len(p_inner_list), len(p_inter_list)))
     for i, p_inner in enumerate(p_inner_list):
         for j, p_inter in enumerate(p_inter_list):
             for k, exper_idx in enumerate(num_experiments):
-                res1[k, i,j], res2[k, i,j] = evaluate_para(p_inner, p_inter)
+                res1[k, i, j], res2[k, i, j] = evaluate_para(p_inner, p_inter)
 
     print(np.mean(res1, axis=0) - np.mean(res2, axis=0))
+
 
 if __name__ == '__main__':
     main()
