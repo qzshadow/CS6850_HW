@@ -201,6 +201,7 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
     #     plt.savefig('defender.png')
     # else:
     #     plt.savefig('continuous.png')
+
     if not debug:
         plt.show()
 
@@ -344,7 +345,7 @@ def intersection_divide_union(node_list1, node_list2):
 #               debug=False)
 # ==============================================================================
 
-def evaluate_para(p_inner, p_inter):
+def evaluate_para(p_inter,p_inner=0.5,defender_k_in=5):
     n1 = 50
     p1 = p2 = p_inner
     n2 = 50
@@ -353,7 +354,7 @@ def evaluate_para(p_inner, p_inter):
     A = 2
     B = 1
     steps = 20
-    defender_k = 5
+    defender_k = defender_k_in
 
     J = generate_two_block(n1, p1, n2, p2, inter_prob)
     while not nx.is_connected(J):
@@ -366,23 +367,24 @@ def evaluate_para(p_inner, p_inter):
     J_local = J.copy()
     degree_heri_nodes = same_side_between_heuristic_nodes_gen(J_local, n1, defender_k)
     turn_nodes_to_discrete(J_local, degree_heri_nodes)
-    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'beta', False)
+    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
     num_newtech, sum_newtech = summarize_graph(J_local, degree_heri_nodes)
+
 
     # degree_heristic(J_local2, defender_k, nx.betweenness_centrality)
     J_local2 = J.copy()
     degree_heri_nodes2 = heuristic_nodes_gen(J_local2, n1, defender_k)
     turn_nodes_to_discrete(J_local2, degree_heri_nodes2)
-    graph_iterate(J_local2, degree_heri_nodes2, pos, steps, A, B, 'beta', False)
+    graph_iterate(J_local2, degree_heri_nodes2, pos, steps, A, B, 'alpha', False)
     num_newtech2, sum_newtech2 = summarize_graph(J_local2, degree_heri_nodes2)
 
-    if len(degree_heri_nodes) == 5:
-        print(intersection_divide_union(degree_heri_nodes, degree_heri_nodes2))
+    # if len(degree_heri_nodes) == 5:
+    #     print(intersection_divide_union(degree_heri_nodes, degree_heri_nodes2))
 
     return num_newtech, num_newtech2
 
 
-def main():
+def eval_p_inner_p_inter():
     p_inner_list = np.linspace(0.2, 0.8, num=4)
     p_inter_list = np.logspace(-3, -2, num=6)
     num_experiments = np.arange(3)
@@ -394,6 +396,30 @@ def main():
                 res1[k, i, j], res2[k, i, j] = evaluate_para(p_inner, p_inter)
 
     print(np.mean(res1, axis=0),'\n', np.mean(res2, axis=0), '\n', np.mean(res1, axis=0) - np.mean(res2, axis=0))
+
+def eval_k_p_inter():
+    p_inter_list = np.logspace(-3,-2,num=6)
+    num_experiments = np.arange(5)
+    res1 = np.empty(shape=(len(num_experiments), len(p_inter_list), 3))
+    res2 = np.empty(shape=(len(num_experiments), len(p_inter_list), 3))
+    for i1, p_inter in enumerate(p_inter_list):
+        for i2, k in enumerate([int(0.5*2500*p_inter),int(2500*p_inter),int(1.5*2500*p_inter)]):
+            for i3, exper_idx in enumerate(num_experiments):
+                res1[i3, i1, i2], res2[i3, i1, i2] = evaluate_para(p_inter,defender_k_in=k)
+
+    print(np.mean(res1, axis=0), '\n', np.mean(res2, axis=0), '\n', np.mean(res1, axis=0) - np.mean(res2, axis=0))
+
+def main():
+    p_inter_list = np.logspace(-3,-2,num=2)
+    num_experiments = np.arange(1)
+    res1 = np.empty(shape=(len(num_experiments), len(p_inter_list), 1))
+    res2 = np.empty(shape=(len(num_experiments), len(p_inter_list), 1))
+    for i1, p_inter in enumerate(p_inter_list):
+        for i2, k in enumerate([int(1.5*2500*p_inter)]):
+            for i3, exper_idx in enumerate(num_experiments):
+                res1[i3, i1, i2], res2[i3, i1, i2] = evaluate_para(p_inter,defender_k_in=k)
+
+    print(np.mean(res1, axis=0), '\n', np.mean(res2, axis=0), '\n', np.mean(res1, axis=0) - np.mean(res2, axis=0))
 
 
 if __name__ == '__main__':
