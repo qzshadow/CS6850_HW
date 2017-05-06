@@ -31,7 +31,6 @@ return example:
 ['r','r','b','grey']
 """
 
-
 def get_node_color(G, attr):
     node_attr = nx.get_node_attributes(G, attr)
     color_res = []
@@ -103,6 +102,7 @@ def graph_naive_iterate(G, pos, steps, A, B, plot=True, debug=False):
 
 
 def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
+    num_newtech_list = []
     for t in range(steps):
         if plot == 'color':
             #            h = 1
@@ -149,6 +149,10 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
         elif plot == 'text':
             num_newtech, sum_newtech = summarize_graph(G, heri_nodes)
             print("step: " + repr(t) + "red_num: " + repr(num_newtech))
+
+        elif plot == 'speed':
+            num_newtech, sum_newtech = summarize_graph(G, heri_nodes)
+            num_newtech_list.append(num_newtech)
 
         if debug:
             nx.draw_networkx_labels(G, pos)
@@ -201,9 +205,12 @@ def graph_iterate(G, heri_nodes, pos, steps, A, B, plot='alpha', debug=False):
     #     plt.savefig('defender.png')
     # else:
     #     plt.savefig('continuous.png')
-
+    if plot == 'speed':
+        return num_newtech_list
     if not debug:
         plt.show()
+
+    return None
 
 
 def generate_two_block(n1, p1, n2, p2, inter_prob):
@@ -367,19 +374,24 @@ def evaluate_para(p_inter,p_inner=0.5,defender_k_in=5):
     J_local = J.copy()
     degree_heri_nodes = same_side_between_heuristic_nodes_gen(J_local, n1, defender_k)
     turn_nodes_to_discrete(J_local, degree_heri_nodes)
-    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
+    two_side_speed = graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'speed', False)
     num_newtech, sum_newtech = summarize_graph(J_local, degree_heri_nodes)
 
 
-    # degree_heristic(J_local2, defender_k, nx.betweenness_centrality)
+    # degree_heristic(J_local2, defender_k, nx.betweenness_centrality) #heuristic_nodes_gen(J_local2, n1, defender_k)
     J_local2 = J.copy()
-    degree_heri_nodes2 = heuristic_nodes_gen(J_local2, n1, defender_k)
+    degree_heri_nodes2 = degree_heristic(J_local2, defender_k, nx.betweenness_centrality)
     turn_nodes_to_discrete(J_local2, degree_heri_nodes2)
-    graph_iterate(J_local2, degree_heri_nodes2, pos, steps, A, B, 'alpha', False)
+    degree_speed = graph_iterate(J_local2, degree_heri_nodes2, pos, steps, A, B, 'speed', False)
     num_newtech2, sum_newtech2 = summarize_graph(J_local2, degree_heri_nodes2)
 
     # if len(degree_heri_nodes) == 5:
     #     print(intersection_divide_union(degree_heri_nodes, degree_heri_nodes2))
+    if two_side_speed and degree_speed:
+        plt.plot(range(len(two_side_speed)), two_side_speed, range(len(degree_speed)), degree_speed)
+        plt.legend(['two_side', 'degree'])
+        plt.title('k={0}, p_inter={1}'.format(defender_k_in, p_inter))
+        plt.show()
 
     return num_newtech, num_newtech2
 
@@ -399,7 +411,7 @@ def eval_p_inner_p_inter():
 
 def eval_k_p_inter():
     p_inter_list = np.logspace(-3,-2,num=6)
-    num_experiments = np.arange(5)
+    num_experiments = np.arange(1)
     res1 = np.empty(shape=(len(num_experiments), len(p_inter_list), 3))
     res2 = np.empty(shape=(len(num_experiments), len(p_inter_list), 3))
     for i1, p_inter in enumerate(p_inter_list):
@@ -410,12 +422,12 @@ def eval_k_p_inter():
     print(np.mean(res1, axis=0), '\n', np.mean(res2, axis=0), '\n', np.mean(res1, axis=0) - np.mean(res2, axis=0))
 
 def main():
-    p_inter_list = np.logspace(-3,-2,num=2)
-    num_experiments = np.arange(1)
+    p_inter_list = [0.00630957]
+    num_experiments = np.arange(10)
     res1 = np.empty(shape=(len(num_experiments), len(p_inter_list), 1))
     res2 = np.empty(shape=(len(num_experiments), len(p_inter_list), 1))
     for i1, p_inter in enumerate(p_inter_list):
-        for i2, k in enumerate([int(1.5*2500*p_inter)]):
+        for i2, k in enumerate([int(2500*p_inter)]):
             for i3, exper_idx in enumerate(num_experiments):
                 res1[i3, i1, i2], res2[i3, i1, i2] = evaluate_para(p_inter,defender_k_in=k)
 
@@ -423,4 +435,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    eval_k_p_inter()
