@@ -260,8 +260,8 @@ def heuristic_nodes_gen_(G, start_idx, defender_k):
     print(link_matrix.shape)
 
 
-def heuristic_nodes_gen(G, start_idx, k, N):
-    interEdgeCount = np.zeros((N), dtype='int')
+def heuristic_nodes_gen(G, start_idx, k):
+    interEdgeCount = np.zeros(len(G.nodes()), dtype='int')
     for node_from, node_to in G.edges():
         if node_from < 50 <= node_to:
             interEdgeCount[node_to] += 1
@@ -273,6 +273,22 @@ def heuristic_nodes_gen(G, start_idx, k, N):
     return list(output)
 
 
+def same_side_between_heuristic_nodes_gen(G, start_idx, k):
+    interEdgeCount = np.zeros(len(G.nodes()), dtype='int')
+    for node_from, node_to in G.edges():
+        if node_from < 50 <= node_to:
+            interEdgeCount[node_to] += 1
+        elif node_from >= 50 > node_to:
+            interEdgeCount[node_from] += 1
+    betweenness_idx = degree_heristic(G, 100, nx.betweenness_centrality)
+    output = []
+    for idx in betweenness_idx:
+        if interEdgeCount[idx] > 0:
+            output.append(idx)
+    # print(output[:k])
+    return output[:k]
+
+
 def helper_debug(G):
     output = []
     for node_from, node_to in G.edges():
@@ -282,6 +298,10 @@ def helper_debug(G):
             output.append(node_from)
     return set(output)
 
+def intersection_divide_union(node_list1, node_list2):
+    node_set1 = set(node_list1)
+    node_set2 = set(node_list2)
+    return len(node_set1.intersection(node_set2)) / len(node_set1.union(node_set2))
 
 # ==============================================================================
 # H = nx.Graph()
@@ -344,23 +364,27 @@ def evaluate_para(p_inner, p_inter):
     init_graph(J, a_init_nodes_idx)
 
     J_local = J.copy()
-    degree_heri_nodes = heuristic_nodes_gen(J_local, n1, defender_k, n1 + n2)
+    degree_heri_nodes = same_side_between_heuristic_nodes_gen(J_local, n1, defender_k)
     turn_nodes_to_discrete(J_local, degree_heri_nodes)
-    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'alpha', False)
+    graph_iterate(J_local, degree_heri_nodes, pos, steps, A, B, 'beta', False)
     num_newtech, sum_newtech = summarize_graph(J_local, degree_heri_nodes)
 
+    # degree_heristic(J_local2, defender_k, nx.betweenness_centrality)
     J_local2 = J.copy()
-    degree_heri_nodes2 = degree_heristic(J_local2, defender_k, nx.betweenness_centrality)
+    degree_heri_nodes2 = heuristic_nodes_gen(J_local2, n1, defender_k)
     turn_nodes_to_discrete(J_local2, degree_heri_nodes2)
-    graph_iterate(J_local2, degree_heri_nodes2, pos, steps, A, B, 'alpha', False)
+    graph_iterate(J_local2, degree_heri_nodes2, pos, steps, A, B, 'beta', False)
     num_newtech2, sum_newtech2 = summarize_graph(J_local2, degree_heri_nodes2)
+
+    if len(degree_heri_nodes) == 5:
+        print(intersection_divide_union(degree_heri_nodes, degree_heri_nodes2))
 
     return num_newtech, num_newtech2
 
 
 def main():
     p_inner_list = np.linspace(0.2, 0.8, num=4)
-    p_inter_list = np.logspace(-3, -1, num=3)
+    p_inter_list = np.logspace(-3, -2, num=6)
     num_experiments = np.arange(3)
     res1 = np.empty(shape=(len(num_experiments), len(p_inner_list), len(p_inter_list)))
     res2 = np.empty(shape=(len(num_experiments), len(p_inner_list), len(p_inter_list)))
@@ -369,7 +393,7 @@ def main():
             for k, exper_idx in enumerate(num_experiments):
                 res1[k, i, j], res2[k, i, j] = evaluate_para(p_inner, p_inter)
 
-    print(np.mean(res1, axis=0) - np.mean(res2, axis=0))
+    print(np.mean(res1, axis=0),'\n', np.mean(res2, axis=0), '\n', np.mean(res1, axis=0) - np.mean(res2, axis=0))
 
 
 if __name__ == '__main__':
